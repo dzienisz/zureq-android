@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">ZUREQ Shopper</string>
+    <string name="tab_search">Search</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Welcome -->
+    <string name="welcome_intro">Search independent online shops, check live prices and stock, and jump straight to the shop\'s checkout.</string>
+    <string name="welcome_feature_words">Search in your own words and language</string>
+    <string name="welcome_feature_country">Pick a country or the whole EU</string>
+    <string name="welcome_feature_live">Live price and stock straight from the shop</string>
+    <string name="welcome_feature_checkout">Checkout opens on the shop\'s own site</string>
+    <string name="welcome_key_hint">zmcp_… API key</string>
+    <string name="welcome_connect">Connect</string>
+    <string name="welcome_key_help">Create a key at chat.zureq.io/developers. It is checked for free and stored only on this device, encrypted.</string>
+    <string name="welcome_credits_note">Free ZUREQ accounts include monthly credits: a search costs 3, a live price or checkout link 1.</string>
+
+    <!-- Search -->
+    <string name="search_title" translatable="false">ZUREQ</string>
+    <string name="search_prompt">What are you looking for?</string>
+    <string name="search_filters">Filters</string>
+    <string name="search_intro_title">Search ZUREQ shops</string>
+    <string name="search_intro_body">Find products across %1$s independent shops. Searches cost 3 credits, or 1 when nothing is found.</string>
+    <string name="search_thousands_of">thousands of</string>
+    <string name="search_try">Try searching</string>
+    <string name="search_recent">Recent searches</string>
+    <string name="search_clear">Clear</string>
+    <string name="search_loading">Searching shops…</string>
+    <string name="search_empty_title">No products found</string>
+    <string name="search_empty_body">Nothing matched “%1$s”. Try other words, another country or fewer filters.</string>
+    <string name="search_empty_body_market">Nothing matched “%1$s” in %2$s. Try other words, another country or fewer filters.</string>
+    <string name="search_failed">Search failed</string>
+    <string name="search_try_again">Try again</string>
+    <string name="search_min_chars">Type at least 2 characters.</string>
+    <string name="search_any_country">Any country</string>
+    <string name="search_any">Any</string>
+    <string name="search_market_a11y">Country: %1$s</string>
+    <string name="filters_title">Filters</string>
+    <string name="filters_max_price">Max price</string>
+    <string name="filters_no_limit">No limit</string>
+    <string name="filters_currency_note">In the shop\'s own currency.</string>
+    <string name="filters_in_stock">In stock only</string>
+    <string name="filters_reset">Reset filters</string>
+    <string name="filters_done">Done</string>
+    <string name="out_of_stock">Out of stock</string>
+    <string name="available">Available</string>
+    <plurals name="in_stock_count">
+        <item quantity="one">%d in stock</item>
+        <item quantity="other">%d in stock</item>
+    </plurals>
+
+    <string name="suggestion_1">wireless headphones</string>
+    <string name="suggestion_2">power bank</string>
+    <string name="suggestion_3">USB-C cable</string>
+    <string name="suggestion_4">coffee beans</string>
+    <string name="suggestion_5">running shoes</string>
+    <string name="suggestion_6">LEGO set</string>
+    <string name="suggestion_7">phone case</string>
+    <string name="suggestion_8">board game</string>
+    <string name="suggestion_9">desk lamp</string>
+    <string name="suggestion_10">yoga mat</string>
+
+    <!-- Product -->
+    <string name="product_title">Product</string>
+    <string name="product_shop">Shop</string>
+    <string name="product_price">Price</string>
+    <string name="product_stock">Stock</string>
+    <string name="product_price_info">Price info</string>
+    <string name="product_checking">Checking live price…</string>
+    <string name="product_variant">Variant</string>
+    <string name="product_description">Description</string>
+    <string name="product_buy_at">Buy at %1$s</string>
+    <string name="product_shop_fallback">shop</string>
+    <string name="product_checkout_note">Opens the shop\'s checkout in your browser. You pay on the shop\'s own site. Costs 1 credit.</string>
+    <string name="product_invalid_link">The shop returned an invalid checkout link.</string>
+    <string name="product_load_failed">Could not check the live price.</string>
+    <string name="product_checkout_failed">Could not open the checkout.</string>
+    <string name="back">Back</string>
+    <string name="fresh_live">Live from shop</string>
+    <string name="fresh_just_now">Updated just now</string>
+    <string name="fresh_minutes">Updated %1$d min ago</string>
+    <string name="fresh_hours">Updated %1$d h ago</string>
+    <string name="fresh_days">Updated %1$d d ago</string>
+
+    <!-- Credits -->
+    <string name="credits_left">%1$s credits left</string>
+    <string name="credits_title">Credits</string>
+    <string name="credits_plan">Plan</string>
+    <string name="credits_used_in">%1$s of %2$s used in %3$s</string>
+    <string name="credits_used">%1$s of %2$s used</string>
+    <string name="credits_session">%1$s credits used in this session</string>
+    <string name="credits_low">Running low. Credits reset at the start of the next period.</string>
+    <string name="credits_exhausted">No credits left this period. Searches will fail until they reset.</string>
+    <string name="credits_pricing">Search 3 · live price 1 · checkout link 1</string>
+    <string name="credits_unknown">Credits unknown</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_connected_with">Connected with</string>
+    <string name="settings_api_key">API key</string>
+    <string name="settings_zureq_account">ZUREQ account</string>
+    <string name="settings_disconnect_key">Disconnect API key</string>
+    <string name="settings_disconnect_confirm">Disconnect this API key from the app?</string>
+    <string name="settings_disconnect">Disconnect</string>
+    <string name="cancel">Cancel</string>
+    <string name="settings_about">About</string>
+    <string name="settings_docs">ZUREQ docs</string>
+    <string name="settings_version">Version</string>
+
+    <!-- Errors -->
+    <string name="error_no_key">Sign in with ZUREQ or add an API key to get started.</string>
+    <string name="error_sign_in_ended">Your ZUREQ sign-in has ended. Sign in again to continue.</string>
+    <string name="error_bad_key">The API key was rejected. Check that it is correct and still active.</string>
+    <string name="error_rate_limit">ZUREQ is rate limiting requests. Please try again shortly.</string>
+    <string name="error_credits_exhausted">Your monthly ZUREQ credits are exhausted.</string>
+    <string name="error_invalid_args">The request was not accepted. Check the search fields.</string>
+    <string name="error_unavailable">ZUREQ is temporarily unavailable. Please try again shortly.</string>
+    <string name="error_api">ZUREQ returned an unexpected error.</string>
+    <string name="error_network">Could not reach ZUREQ. Check your connection.</string>
+    <string name="error_parse">ZUREQ returned data this app could not read.</string>
+    <string name="error_auth_cancelled">Sign-in was cancelled.</string>
+    <string name="error_auth_failed">Could not complete sign-in with ZUREQ. Please try again.</string>
+    <string name="error_invalid_price">Max price must be greater than 0.</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+</resources>
