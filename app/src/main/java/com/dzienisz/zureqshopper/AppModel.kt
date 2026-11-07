@@ -14,6 +14,7 @@ import com.dzienisz.zureqshopper.auth.AuthHttp
 import com.dzienisz.zureqshopper.auth.OkHttpAuthHttp
 import com.dzienisz.zureqshopper.auth.ZureqAuth
 import com.dzienisz.zureqshopper.data.SecretStore
+import com.dzienisz.zureqshopper.data.ShoppingList
 import com.dzienisz.zureqshopper.data.Watchlist
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,6 +34,7 @@ class AppModel(
 ) {
     val auth = ZureqAuth(secrets, prefs, authHttp, now)
     val watchlist = Watchlist(prefs, now)
+    val shoppingList = ShoppingList(prefs, now)
     data class State(
         val hasKey: Boolean = false,
         val usesZureqSignIn: Boolean = false,

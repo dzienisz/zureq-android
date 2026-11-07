@@ -2,6 +2,7 @@ package com.dzienisz.zureqshopper.ui
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Settings
@@ -38,6 +39,7 @@ import java.net.URLEncoder
 private enum class Tab(val route: String, val label: Int, val icon: ImageVector) {
     Search("search", R.string.tab_search, Icons.Filled.Search),
     Watchlist("watchlist", R.string.tab_watchlist, Icons.Filled.Star),
+    List("list", R.string.tab_list, Icons.AutoMirrored.Filled.ListAlt),
     Settings("settings", R.string.tab_settings, Icons.Filled.Settings),
 }
 
@@ -89,6 +91,7 @@ fun RootScreen(model: AppModel) {
             }
             composable(Tab.Search.route) { SearchScreen(model, searchModel, openProduct) }
             composable(Tab.Watchlist.route) { WatchlistScreen(model, openProduct) }
+            composable(Tab.List.route) { ShoppingListScreen(model) }
             composable(
                 "product/{product}",
                 arguments = listOf(navArgument("product") { type = NavType.StringType }),

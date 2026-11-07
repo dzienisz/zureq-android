@@ -147,4 +147,38 @@
     <string name="watch_add">Watch price</string>
     <string name="watch_remove">Stop watching</string>
     <string name="remove">Remove</string>
+    <string name="tab_list">List</string>
+    <string name="list_title">List</string>
+    <string name="list_items">Items</string>
+    <string name="list_placeholder">Bluetooth headphones\nPhone case\nUSB-C cable</string>
+    <string name="list_search">Search</string>
+    <plurals name="list_search_items">
+        <item quantity="one">Search %d item</item>
+        <item quantity="other">Search %d items</item>
+    </plurals>
+    <string name="list_searching">Searching…</string>
+    <string name="list_progress">Searching %1$d of %2$d: %3$s</string>
+    <string name="list_too_many">Enter no more than %d items.</string>
+    <string name="list_footer">One per line or separated by commas, up to %d.</string>
+    <string name="list_footer_cost">%1$s Searching costs up to %2$d credits.</string>
+    <string name="list_clear">Clear</string>
+    <string name="list_no_matches">No matches in stock.</string>
+    <string name="list_not_searched">Not searched yet.</string>
+    <string name="list_checking_live">Checking live price…</string>
+    <string name="list_variant">Variant</string>
+    <string name="list_choose">Choose…</string>
+    <string name="list_by_shop">By shop</string>
+    <string name="list_shop_footer">Checking a shop costs 1 credit (remembered for a day), then 1 credit per cart. You pay on each shop\'s own site.</string>
+    <string name="list_pick_hint">Pick one result per item to see shop totals.</string>
+    <plurals name="list_checkout_items">
+        <item quantity="one">Checkout %d item</item>
+        <item quantity="other">Checkout %d items</item>
+    </plurals>
+    <string name="list_still_checking">Still checking %s. Try again in a moment.</string>
+    <string name="list_choose_variant_for">Choose a variant for: %s</string>
+    <string name="list_no_checkout_links">This shop doesn\'t support checkout links. Open the products on the shop\'s site instead.</string>
+    <string name="list_cart">Cart</string>
+    <string name="list_cart_n">Cart %1$d of %2$d</string>
+    <string name="list_search_failed">Search failed.</string>
+    <string name="list_open">Open</string>
 </resources>
