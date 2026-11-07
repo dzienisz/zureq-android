@@ -3,6 +3,7 @@ package com.dzienisz.zureqshopper.ui
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -36,6 +37,7 @@ import java.net.URLEncoder
 
 private enum class Tab(val route: String, val label: Int, val icon: ImageVector) {
     Search("search", R.string.tab_search, Icons.Filled.Search),
+    Watchlist("watchlist", R.string.tab_watchlist, Icons.Filled.Star),
     Settings("settings", R.string.tab_settings, Icons.Filled.Settings),
 }
 
@@ -81,12 +83,12 @@ fun RootScreen(model: AppModel) {
         },
     ) { padding ->
         NavHost(navController, startDestination = Tab.Search.route, modifier = Modifier.padding(padding)) {
-            composable(Tab.Search.route) {
-                SearchScreen(model, searchModel) { product ->
-                    val encoded = URLEncoder.encode(ZureqClient.json.encodeToString(Product.serializer(), product), "UTF-8")
-                    navController.navigate("product/$encoded")
-                }
+            val openProduct: (Product) -> Unit = { product ->
+                val encoded = URLEncoder.encode(ZureqClient.json.encodeToString(Product.serializer(), product), "UTF-8")
+                navController.navigate("product/$encoded")
             }
+            composable(Tab.Search.route) { SearchScreen(model, searchModel, openProduct) }
+            composable(Tab.Watchlist.route) { WatchlistScreen(model, openProduct) }
             composable(
                 "product/{product}",
                 arguments = listOf(navArgument("product") { type = NavType.StringType }),

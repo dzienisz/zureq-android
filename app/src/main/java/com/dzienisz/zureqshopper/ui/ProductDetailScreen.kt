@@ -29,6 +29,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,6 +83,8 @@ fun ProductDetailScreen(app: AppModel, initial: Product, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val invalidLink = stringResource(R.string.product_invalid_link)
+    val watchState by app.watchlist.state.collectAsStateWithLifecycle()
+    val watched = watchState.items.any { it.id == initial.id }
 
     LaunchedEffect(initial.id) {
         if (details != null) return@LaunchedEffect
@@ -91,6 +96,7 @@ fun ProductDetailScreen(app: AppModel, initial: Product, onBack: () -> Unit) {
                 ProductDetails.serializer(),
             )
             val (applied, previous) = applyLiveDetails(product, live)
+            app.watchlist.record(applied)
             product = applied
             previousPrice = previous
             details = live
@@ -142,6 +148,15 @@ fun ProductDetailScreen(app: AppModel, initial: Product, onBack: () -> Unit) {
                 title = { Text(product.shopName ?: stringResource(R.string.product_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
+                },
+                actions = {
+                    IconButton(onClick = { app.watchlist.toggle(product, if (details != null) System.currentTimeMillis() else null) }) {
+                        Icon(
+                            if (watched) Icons.Filled.Star else Icons.Filled.StarBorder,
+                            contentDescription = stringResource(if (watched) R.string.watch_remove else R.string.watch_add),
+                            tint = if (watched) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 },
             )
         },

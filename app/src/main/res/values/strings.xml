@@ -130,4 +130,21 @@
     <string name="error_auth_failed">Could not complete sign-in with ZUREQ. Please try again.</string>
     <string name="error_invalid_price">Max price must be greater than 0.</string>
     <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="tab_watchlist">Watchlist</string>
+    <string name="watchlist_title">Watchlist</string>
+    <string name="watchlist_refresh">Refresh prices</string>
+    <string name="watchlist_empty_title">No watched products</string>
+    <string name="watchlist_empty_body">Tap the star on a product to watch its price.</string>
+    <plurals name="watchlist_footer">
+        <item quantity="one">Refreshing checks the live price for 1 credit (%d product).</item>
+        <item quantity="other">Refreshing checks each live price for 1 credit (%d total).</item>
+    </plurals>
+    <string name="watchlist_partial_error">Could not check %1$d of %2$d prices. Try again later.</string>
+    <string name="watchlist_checked">Checked %s</string>
+    <string name="watchlist_not_checked">Not checked live yet</string>
+    <string name="watchlist_price_down">Price down</string>
+    <string name="watchlist_price_up">Price up</string>
+    <string name="watch_add">Watch price</string>
+    <string name="watch_remove">Stop watching</string>
+    <string name="remove">Remove</string>
 </resources>

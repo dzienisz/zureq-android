@@ -133,3 +133,23 @@ fun shopCountText(model: AppModel): String {
     if (total < 1000) return stringResource(R.string.search_thousands_of)
     return java.text.NumberFormat.getIntegerInstance(LocalContext.current.resources.configuration.locales[0]).format(total / 100 * 100) + "+"
 }
+
+@Composable
+fun EmptyState(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    body: String,
+    modifier: Modifier = Modifier,
+) {
+    androidx.compose.foundation.layout.Column(
+        modifier.padding(32.dp),
+        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+    ) {
+        androidx.compose.material3.Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(48.dp))
+        androidx.compose.foundation.layout.Spacer(Modifier.size(12.dp))
+        Text(title, style = MaterialTheme.typography.titleMedium, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        androidx.compose.foundation.layout.Spacer(Modifier.size(4.dp))
+        Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+    }
+}
