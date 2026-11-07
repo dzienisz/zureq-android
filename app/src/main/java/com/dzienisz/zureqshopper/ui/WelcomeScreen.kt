@@ -1,5 +1,15 @@
 package com.dzienisz.zureqshopper.ui
 
+import android.content.Intent
+import android.net.Uri
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalContext
+import com.dzienisz.zureqshopper.MainActivity
+import com.dzienisz.zureqshopper.auth.LoopbackServer
+import kotlinx.coroutines.Job
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -67,7 +78,7 @@ fun WelcomeScreen(model: AppModel) {
             Feature(Icons.Filled.Bolt, stringResource(R.string.welcome_feature_live))
             Feature(Icons.Filled.ShoppingCart, stringResource(R.string.welcome_feature_checkout))
         }
-        ApiKeyForm(model)
+        SignInSection(model)
         Text(stringResource(R.string.welcome_credits_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -77,6 +88,73 @@ private fun Feature(icon: ImageVector, text: String) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         Text(text, style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
+/** "Connect with Zureq" (OAuth in the browser, callback on localhost) with the API-key form folded underneath. */
+@Composable
+fun SignInSection(model: AppModel) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var job by remember { mutableStateOf<Job?>(null) }
+    var server by remember { mutableStateOf<LoopbackServer?>(null) }
+    var error by remember { mutableStateOf<Throwable?>(null) }
+    var showKey by remember { mutableStateOf(false) }
+    val waiting = job != null
+
+    fun cancel() {
+        job?.cancel()
+        job = null
+        server?.stop()
+        server = null
+    }
+
+    fun signIn() {
+        if (waiting) return
+        error = null
+        job = scope.launch {
+            val loopback = LoopbackServer()
+            server = loopback
+            try {
+                val request = model.auth.startRequest()
+                loopback.start()
+                CustomTabsIntent.Builder().setShowTitle(true).build().launchUrl(context, Uri.parse(request.url))
+                val callback = loopback.awaitCallback()
+                model.completeSignIn(request, callback)
+                context.startActivity(
+                    Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                )
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                error = e
+            } finally {
+                loopback.stop()
+                server = null
+                job = null
+            }
+        }
+    }
+
+    DisposableEffect(Unit) { onDispose { cancel() } }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        if (waiting) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                Text(stringResource(R.string.welcome_waiting), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                TextButton(onClick = { cancel() }) { Text(stringResource(R.string.cancel)) }
+            }
+        } else {
+            Button(onClick = { signIn() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.welcome_sign_in)) }
+        }
+        error?.let { Text(errorText(it), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        Text(stringResource(R.string.welcome_sign_in_help), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (showKey) {
+            ApiKeyForm(model)
+        } else {
+            OutlinedButton(onClick = { showKey = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.welcome_have_key)) }
+        }
     }
 }
 

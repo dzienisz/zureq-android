@@ -13,6 +13,13 @@
     <string name="welcome_key_hint">zmcp_… API key</string>
     <string name="welcome_connect">Connect</string>
     <string name="welcome_key_help">Create a key at chat.zureq.io/developers. It is checked for free and stored only on this device, encrypted.</string>
+    <string name="welcome_sign_in">Connect with Zureq</string>
+    <string name="welcome_sign_in_help">Signs you in on chat.zureq.io in your browser; no key to copy.</string>
+    <string name="welcome_waiting">Waiting for ZUREQ sign-in in your browser…</string>
+    <string name="welcome_have_key">Have an API key instead?</string>
+    <string name="welcome_or">or</string>
+    <string name="settings_disconnect_account">Sign out of ZUREQ</string>
+    <string name="settings_disconnect_account_confirm">Sign out of your ZUREQ account on this device?</string>
     <string name="welcome_credits_note">Free ZUREQ accounts include monthly credits: a search costs 3, a live price or checkout link 1.</string>
 
     <!-- Search -->

@@ -10,6 +10,9 @@ import com.dzienisz.zureqshopper.api.OkHttpTransport
 import com.dzienisz.zureqshopper.api.Usage
 import com.dzienisz.zureqshopper.api.ZureqClient
 import com.dzienisz.zureqshopper.api.ZureqException
+import com.dzienisz.zureqshopper.auth.AuthHttp
+import com.dzienisz.zureqshopper.auth.OkHttpAuthHttp
+import com.dzienisz.zureqshopper.auth.ZureqAuth
 import com.dzienisz.zureqshopper.data.SecretStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,8 +27,10 @@ class AppModel(
     private val secrets: SecretStore,
     private val prefs: SharedPreferences,
     transport: HttpTransport = OkHttpTransport(),
+    authHttp: AuthHttp = OkHttpAuthHttp(),
     private val now: () -> Long = System::currentTimeMillis,
 ) {
+    val auth = ZureqAuth(secrets, prefs, authHttp, now)
     data class State(
         val hasKey: Boolean = false,
         val usesZureqSignIn: Boolean = false,
@@ -42,9 +47,10 @@ class AppModel(
 
     init {
         val storedKey = !secrets.read(API_KEY_ACCOUNT).isNullOrEmpty()
+        val signedIn = auth.hasSession
         _state.value = State(
-            hasKey = storedKey,
-            usesZureqSignIn = false,
+            hasKey = storedKey || signedIn,
+            usesZureqSignIn = signedIn && !storedKey,
             history = prefs.getString(HISTORY_KEY, null)?.let { decodeList(it) } ?: emptyList(),
         )
     }
@@ -76,9 +82,26 @@ class AppModel(
         _state.update { it.copy(hasKey = true, usesZureqSignIn = false, usage = usage) }
     }
 
+    /** Finishes Sign in with ZUREQ once the browser redirected to [callback]; the session replaces any API key. */
+    suspend fun completeSignIn(request: ZureqAuth.Request, callback: String) {
+        auth.complete(request, callback)
+        secrets.delete(API_KEY_ACCOUNT)
+        val usage = runCatching { client.call("get_usage", deserializer = Usage.serializer()) }.getOrNull()
+        _state.update { it.copy(hasKey = true, usesZureqSignIn = true, usage = usage, sessionCredits = 0.0) }
+    }
+
+    /** Disconnects the API key or signs out of ZUREQ (revoking the session server-side). */
+    suspend fun disconnect() {
+        secrets.delete(API_KEY_ACCOUNT)
+        val tokens = auth.forget()
+        _state.update { it.copy(hasKey = false, usesZureqSignIn = false, usage = null, sessionCredits = 0.0) }
+        if (tokens != null) auth.revoke(tokens)
+    }
+
     /** Disconnects the API key. */
     fun removeKey() {
         secrets.delete(API_KEY_ACCOUNT)
+        auth.forget()
         _state.update { it.copy(hasKey = false, usesZureqSignIn = false, usage = null, sessionCredits = 0.0) }
     }
 
@@ -138,7 +161,15 @@ class AppModel(
 
     /** Prefers a saved API key; OAuth sessions are added in a later step. */
     private inner class AppCredentials : CredentialProvider {
-        override suspend fun credential(): String? = secrets.read(API_KEY_ACCOUNT)?.takeIf { it.isNotEmpty() }
+        override suspend fun credential(): String? =
+            secrets.read(API_KEY_ACCOUNT)?.takeIf { it.isNotEmpty() } ?: if (auth.hasSession) auth.accessToken() else null
+
+        override suspend fun refreshed(rejected: String): String? =
+            if (auth.hasSession) runCatching { auth.refresh(rejected) }.getOrNull() else null
+
+        override suspend fun invalidate() {
+            auth.forget()
+        }
     }
 
     companion object {

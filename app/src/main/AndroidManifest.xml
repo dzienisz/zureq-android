@@ -12,6 +12,7 @@
         android:theme="@style/Theme.ZureqShopper">
         <activity
             android:name=".MainActivity"
+            android:launchMode="singleTop"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>

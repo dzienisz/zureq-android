@@ -27,6 +27,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +48,7 @@ fun SettingsScreen(app: AppModel) {
     val state by app.state.collectAsStateWithLifecycle()
     var confirmRemove by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) { app.refreshUsage() }
 
     Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.settings_title)) }) }) { padding ->
@@ -59,7 +62,12 @@ fun SettingsScreen(app: AppModel) {
                 trailingContent = { Text(stringResource(if (state.usesZureqSignIn) R.string.settings_zureq_account else R.string.settings_api_key)) },
             )
             ListItem(
-                headlineContent = { Text(stringResource(R.string.settings_disconnect_key), color = MaterialTheme.colorScheme.error) },
+                headlineContent = {
+                    Text(
+                        stringResource(if (state.usesZureqSignIn) R.string.settings_disconnect_account else R.string.settings_disconnect_key),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                },
                 modifier = Modifier.clickable { confirmRemove = true },
             )
             HorizontalDivider()
@@ -81,9 +89,11 @@ fun SettingsScreen(app: AppModel) {
     if (confirmRemove) {
         AlertDialog(
             onDismissRequest = { confirmRemove = false },
-            title = { Text(stringResource(R.string.settings_disconnect_confirm)) },
+            title = {
+                Text(stringResource(if (state.usesZureqSignIn) R.string.settings_disconnect_account_confirm else R.string.settings_disconnect_confirm))
+            },
             confirmButton = {
-                TextButton(onClick = { confirmRemove = false; app.removeKey() }) {
+                TextButton(onClick = { confirmRemove = false; scope.launch { app.disconnect() } }) {
                     Text(stringResource(R.string.settings_disconnect), color = MaterialTheme.colorScheme.error)
                 }
             },
