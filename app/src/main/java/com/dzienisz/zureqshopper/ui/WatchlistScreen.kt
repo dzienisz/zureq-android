@@ -80,7 +80,7 @@ fun WatchlistScreen(app: AppModel, onOpen: (Product) -> Unit) {
                             Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.watchlist_refresh))
                         }
                     }
-                    CreditsBadge(appState.usage, Modifier.padding(end = 12.dp))
+                    CreditsBadge(appState.usage, Modifier.padding(end = 12.dp), appState.sessionCredits)
                 },
             )
         },

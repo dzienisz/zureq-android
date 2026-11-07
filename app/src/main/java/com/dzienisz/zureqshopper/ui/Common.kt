@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -89,18 +90,28 @@ fun creditsMessage(state: Credits.State): String? = when (state) {
 
 /** Remaining-credits pill shown in the top bar. */
 @Composable
-fun CreditsBadge(usage: Usage?, modifier: Modifier = Modifier) {
+fun CreditsBadge(usage: Usage?, modifier: Modifier = Modifier, sessionCredits: Double = 0.0) {
     val state = usage?.let { Credits.state(it) } ?: Credits.State.OK
-    val text = usage?.remaining?.let { Credits.format(it) } ?: "—"
+    val text = usage?.remaining?.let { Credits.format(it) } ?: "\u2014"
+    var open by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     AssistChip(
-        onClick = {},
-        enabled = false,
-        label = { Text(text, color = MaterialTheme.colorScheme.onSurface) },
+        onClick = { open = true },
+        label = { Text(text) },
         leadingIcon = {
             Surface(shape = RoundedCornerShape(50), color = creditsTint(state), modifier = Modifier.size(8.dp)) {}
         },
         modifier = modifier.padding(end = 4.dp),
     )
+    if (open) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { open = false },
+            title = { Text(stringResource(R.string.credits_title)) },
+            text = { CreditsSummary(usage, sessionCredits) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = { open = false }) { Text(stringResource(R.string.filters_done)) }
+            },
+        )
+    }
 }
 
 @Composable

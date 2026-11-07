@@ -89,7 +89,7 @@ fun SearchScreen(app: AppModel, model: SearchViewModel, onOpenProduct: (Product)
                             tint = if (state.hasFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                         )
                     }
-                    CreditsBadge(appState.usage)
+                    CreditsBadge(appState.usage, sessionCredits = appState.sessionCredits)
                 },
             )
         },

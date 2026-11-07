@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tab_search">Szukaj</string>
+    <string name="tab_settings">Ustawienia</string>
+
+    <!-- Welcome -->
+    <string name="welcome_intro">Przeszukuj niezależne sklepy internetowe, sprawdzaj ceny i dostępność na żywo i przechodź od razu do kasy sklepu.</string>
+    <string name="welcome_feature_words">Szukaj własnymi słowami, w swoim języku</string>
+    <string name="welcome_feature_country">Wybierz kraj albo całą UE</string>
+    <string name="welcome_feature_live">Cena i dostępność na żywo prosto ze sklepu</string>
+    <string name="welcome_feature_checkout">Kasa otwiera się na stronie sklepu</string>
+    <string name="welcome_key_hint">Klucz API zmcp_…</string>
+    <string name="welcome_connect">Połącz</string>
+    <string name="welcome_key_help">Klucz utworzysz na chat.zureq.io/developers. Sprawdzenie jest darmowe, a klucz jest zapisany tylko na tym urządzeniu, zaszyfrowany.</string>
+    <string name="welcome_sign_in">Połącz z Zureq</string>
+    <string name="welcome_sign_in_help">Logowanie odbywa się na chat.zureq.io w przeglądarce; nie trzeba kopiować klucza.</string>
+    <string name="welcome_waiting">Czekam na logowanie ZUREQ w przeglądarce…</string>
+    <string name="welcome_have_key">Masz klucz API?</string>
+    <string name="welcome_or">albo</string>
+    <string name="settings_disconnect_account">Wyloguj z ZUREQ</string>
+    <string name="settings_disconnect_account_confirm">Wylogować konto ZUREQ na tym urządzeniu?</string>
+    <string name="welcome_credits_note">Darmowe konta ZUREQ mają miesięczne kredyty: wyszukiwanie kosztuje 3, cena na żywo lub link do kasy 1.</string>
+
+    <!-- Search -->
+    <string name="search_prompt">Czego szukasz?</string>
+    <string name="search_filters">Filtry</string>
+    <string name="search_intro_title">Przeszukaj sklepy ZUREQ</string>
+    <string name="search_intro_body">Znajdź produkty w %1$s niezależnych sklepach. Wyszukiwanie kosztuje 3 kredyty, a 1, gdy nic nie znaleziono.</string>
+    <string name="search_thousands_of">tysiącach</string>
+    <string name="search_try">Spróbuj wyszukać</string>
+    <string name="search_recent">Ostatnie wyszukiwania</string>
+    <string name="search_clear">Wyczyść</string>
+    <string name="search_loading">Przeszukuję sklepy…</string>
+    <string name="search_empty_title">Brak produktów</string>
+    <string name="search_empty_body">Nic nie pasuje do „%1$s”. Spróbuj innych słów, innego kraju lub mniejszej liczby filtrów.</string>
+    <string name="search_empty_body_market">Nic nie pasuje do „%1$s” w: %2$s. Spróbuj innych słów, innego kraju lub mniejszej liczby filtrów.</string>
+    <string name="search_failed">Wyszukiwanie nie powiodło się</string>
+    <string name="search_try_again">Spróbuj ponownie</string>
+    <string name="search_min_chars">Wpisz co najmniej 2 znaki.</string>
+    <string name="search_any_country">Dowolny kraj</string>
+    <string name="search_any">Dowolny</string>
+    <string name="search_market_a11y">Kraj: %1$s</string>
+    <string name="filters_title">Filtry</string>
+    <string name="filters_max_price">Maks. cena</string>
+    <string name="filters_no_limit">Bez limitu</string>
+    <string name="filters_currency_note">W walucie sklepu.</string>
+    <string name="filters_in_stock">Tylko dostępne</string>
+    <string name="filters_reset">Wyczyść filtry</string>
+    <string name="filters_done">Gotowe</string>
+    <string name="out_of_stock">Niedostępny</string>
+    <string name="available">Dostępny</string>
+    <plurals name="in_stock_count">
+        <item quantity="one">%d szt. w magazynie</item>
+        <item quantity="few">%d szt. w magazynie</item>
+        <item quantity="many">%d szt. w magazynie</item>
+        <item quantity="other">%d szt. w magazynie</item>
+    </plurals>
+
+    <string name="suggestion_1">słuchawki bezprzewodowe</string>
+    <string name="suggestion_2">powerbank</string>
+    <string name="suggestion_3">kabel USB-C</string>
+    <string name="suggestion_4">kawa ziarnista</string>
+    <string name="suggestion_5">buty do biegania</string>
+    <string name="suggestion_6">zestaw LEGO</string>
+    <string name="suggestion_7">etui na telefon</string>
+    <string name="suggestion_8">gra planszowa</string>
+    <string name="suggestion_9">lampka na biurko</string>
+    <string name="suggestion_10">mata do jogi</string>
+
+    <!-- Product -->
+    <string name="product_title">Produkt</string>
+    <string name="product_shop">Sklep</string>
+    <string name="product_price">Cena</string>
+    <string name="product_stock">Dostępność</string>
+    <string name="product_price_info">Aktualność ceny</string>
+    <string name="product_checking">Sprawdzam cenę na żywo…</string>
+    <string name="product_variant">Wariant</string>
+    <string name="product_description">Opis</string>
+    <string name="product_buy_at">Kup w %1$s</string>
+    <string name="product_shop_fallback">sklepie</string>
+    <string name="product_checkout_note">Otwiera kasę sklepu w przeglądarce. Płacisz na stronie sklepu. Kosztuje 1 kredyt.</string>
+    <string name="product_invalid_link">Sklep zwrócił nieprawidłowy link do kasy.</string>
+    <string name="product_load_failed">Nie udało się sprawdzić ceny na żywo.</string>
+    <string name="product_checkout_failed">Nie udało się otworzyć kasy.</string>
+    <string name="back">Wstecz</string>
+    <string name="fresh_live">Na żywo ze sklepu</string>
+    <string name="fresh_just_now">Zaktualizowano przed chwilą</string>
+    <string name="fresh_minutes">Zaktualizowano %1$d min temu</string>
+    <string name="fresh_hours">Zaktualizowano %1$d godz. temu</string>
+    <string name="fresh_days">Zaktualizowano %1$d dni temu</string>
+
+    <!-- Credits -->
+    <string name="credits_left">Pozostało kredytów: %1$s</string>
+    <string name="credits_title">Kredyty</string>
+    <string name="credits_plan">Plan</string>
+    <string name="credits_used_in">Zużyto %1$s z %2$s w okresie %3$s</string>
+    <string name="credits_used">Zużyto %1$s z %2$s</string>
+    <string name="credits_session">Kredyty zużyte w tej sesji: %1$s</string>
+    <string name="credits_low">Kredyty się kończą. Odnowią się na początku następnego okresu.</string>
+    <string name="credits_exhausted">Brak kredytów w tym okresie. Wyszukiwania nie będą działać do odnowienia.</string>
+    <string name="credits_pricing">Wyszukiwanie 3 · cena na żywo 1 · link do kasy 1</string>
+    <string name="credits_unknown">Kredyty nieznane</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Ustawienia</string>
+    <string name="settings_account">Konto</string>
+    <string name="settings_connected_with">Połączono przez</string>
+    <string name="settings_api_key">Klucz API</string>
+    <string name="settings_zureq_account">Konto ZUREQ</string>
+    <string name="settings_disconnect_key">Odłącz klucz API</string>
+    <string name="settings_disconnect_confirm">Odłączyć ten klucz API od aplikacji?</string>
+    <string name="settings_disconnect">Odłącz</string>
+    <string name="cancel">Anuluj</string>
+    <string name="settings_about">O aplikacji</string>
+    <string name="settings_docs">Dokumentacja ZUREQ</string>
+    <string name="settings_version">Wersja</string>
+
+    <!-- Errors -->
+    <string name="error_no_key">Zaloguj się przez ZUREQ albo dodaj klucz API, aby zacząć.</string>
+    <string name="error_sign_in_ended">Logowanie ZUREQ wygasło. Zaloguj się ponownie, aby kontynuować.</string>
+    <string name="error_bad_key">Klucz API został odrzucony. Sprawdź, czy jest poprawny i nadal aktywny.</string>
+    <string name="error_rate_limit">ZUREQ ogranicza liczbę zapytań. Spróbuj ponownie za chwilę.</string>
+    <string name="error_credits_exhausted">Miesięczne kredyty ZUREQ zostały wyczerpane.</string>
+    <string name="error_invalid_args">Zapytanie nie zostało przyjęte. Sprawdź pola wyszukiwania.</string>
+    <string name="error_unavailable">ZUREQ jest chwilowo niedostępny. Spróbuj ponownie za chwilę.</string>
+    <string name="error_api">ZUREQ zwrócił nieoczekiwany błąd.</string>
+    <string name="error_network">Brak połączenia z ZUREQ. Sprawdź internet.</string>
+    <string name="error_parse">ZUREQ zwrócił dane, których aplikacja nie potrafi odczytać.</string>
+    <string name="error_auth_cancelled">Logowanie zostało anulowane.</string>
+    <string name="error_auth_failed">Nie udało się dokończyć logowania ZUREQ. Spróbuj ponownie.</string>
+    <string name="error_invalid_price">Maksymalna cena musi być większa od 0.</string>
+    <string name="error_generic">Coś poszło nie tak. Spróbuj ponownie.</string>
+
+    <!-- Watchlist -->
+    <string name="tab_watchlist">Obserwowane</string>
+    <string name="watchlist_title">Obserwowane</string>
+    <string name="watchlist_refresh">Odśwież ceny</string>
+    <string name="watchlist_empty_title">Brak obserwowanych produktów</string>
+    <string name="watchlist_empty_body">Dotknij gwiazdki przy produkcie, aby obserwować jego cenę.</string>
+    <plurals name="watchlist_footer">
+        <item quantity="one">Odświeżenie sprawdza cenę na żywo za 1 kredyt (%d produkt).</item>
+        <item quantity="few">Odświeżenie sprawdza każdą cenę na żywo za 1 kredyt (łącznie %d).</item>
+        <item quantity="many">Odświeżenie sprawdza każdą cenę na żywo za 1 kredyt (łącznie %d).</item>
+        <item quantity="other">Odświeżenie sprawdza każdą cenę na żywo za 1 kredyt (łącznie %d).</item>
+    </plurals>
+    <string name="watchlist_partial_error">Nie udało się sprawdzić %1$d z %2$d cen. Spróbuj później.</string>
+    <string name="watchlist_checked">Sprawdzono %s</string>
+    <string name="watchlist_not_checked">Jeszcze nie sprawdzono na żywo</string>
+    <string name="watchlist_price_down">Cena spadła</string>
+    <string name="watchlist_price_up">Cena wzrosła</string>
+    <string name="watch_add">Obserwuj cenę</string>
+    <string name="watch_remove">Przestań obserwować</string>
+    <string name="remove">Usuń</string>
+
+    <!-- Shopping list -->
+    <string name="tab_list">Lista</string>
+    <string name="list_title">Lista</string>
+    <string name="list_items">Produkty</string>
+    <string name="list_placeholder">Słuchawki Bluetooth\nEtui na telefon\nKabel USB-C</string>
+    <string name="list_search">Szukaj</string>
+    <plurals name="list_search_items">
+        <item quantity="one">Szukaj %d produktu</item>
+        <item quantity="few">Szukaj %d produktów</item>
+        <item quantity="many">Szukaj %d produktów</item>
+        <item quantity="other">Szukaj %d produktów</item>
+    </plurals>
+    <string name="list_searching">Szukam…</string>
+    <string name="list_progress">Szukam %1$d z %2$d: %3$s</string>
+    <string name="list_too_many">Wpisz nie więcej niż %d produktów.</string>
+    <string name="list_footer">Po jednym w wierszu albo po przecinku, maks. %d.</string>
+    <string name="list_footer_cost">%1$s Wyszukiwanie kosztuje do %2$d kredytów.</string>
+    <string name="list_clear">Wyczyść</string>
+    <string name="list_no_matches">Brak dostępnych dopasowań.</string>
+    <string name="list_not_searched">Jeszcze nie wyszukano.</string>
+    <string name="list_checking_live">Sprawdzam cenę na żywo…</string>
+    <string name="list_variant">Wariant</string>
+    <string name="list_choose">Wybierz…</string>
+    <string name="list_by_shop">Według sklepu</string>
+    <string name="list_shop_footer">Sprawdzenie sklepu kosztuje 1 kredyt (zapamiętane na dobę), potem 1 kredyt za koszyk. Płacisz na stronie każdego sklepu.</string>
+    <string name="list_pick_hint">Wybierz po jednym wyniku dla każdego produktu, aby zobaczyć sumy dla sklepów.</string>
+    <plurals name="list_checkout_items">
+        <item quantity="one">Do kasy: %d produkt</item>
+        <item quantity="few">Do kasy: %d produkty</item>
+        <item quantity="many">Do kasy: %d produktów</item>
+        <item quantity="other">Do kasy: %d produktów</item>
+    </plurals>
+    <string name="list_still_checking">Wciąż sprawdzam: %s. Spróbuj za chwilę.</string>
+    <string name="list_choose_variant_for">Wybierz wariant dla: %s</string>
+    <string name="list_no_checkout_links">Ten sklep nie obsługuje linków do kasy. Otwórz produkty na stronie sklepu.</string>
+    <string name="list_cart">Koszyk</string>
+    <string name="list_cart_n">Koszyk %1$d z %2$d</string>
+    <string name="list_search_failed">Wyszukiwanie nie powiodło się.</string>
+    <string name="list_open">Otwórz</string>
+</resources>

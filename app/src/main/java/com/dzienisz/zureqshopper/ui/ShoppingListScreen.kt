@@ -134,7 +134,7 @@ fun ShoppingListScreen(app: AppModel) {
                             Text(stringResource(R.string.list_clear), color = MaterialTheme.colorScheme.error)
                         }
                     }
-                    CreditsBadge(appState.usage, Modifier.padding(end = 12.dp))
+                    CreditsBadge(appState.usage, Modifier.padding(end = 12.dp), appState.sessionCredits)
                 },
             )
         },
