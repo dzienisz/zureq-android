@@ -183,6 +183,10 @@ fun ProductDetailScreen(app: AppModel, initial: Product, onBack: () -> Unit) {
                 val live = details
                 when {
                     live != null -> {
+                        val net = live.priceNet
+                        if (net != null && live.price != null && net != live.price) {
+                            LabeledRow(stringResource(R.string.product_price_net), PriceFormat.string(net, product.currency))
+                        }
                         LabeledRow(stringResource(R.string.product_stock), stockText(Freshness.stock(live)))
                         freshnessText(Freshness.label(live))?.let { LabeledRow(stringResource(R.string.product_price_info), it) }
                     }

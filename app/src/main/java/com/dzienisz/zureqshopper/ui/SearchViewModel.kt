@@ -37,8 +37,12 @@ class SearchViewModel(private val app: AppModel, private val prefs: SharedPrefer
         val products: List<Product> = emptyList(),
         val note: String? = null,
         val searchedQuery: String = "",
+        /** search_products returns at most 50 rows; the first page asks for 20 and "Show more" re-runs the query for 50. */
+        val limit: Int = FIRST_PAGE,
+        val isLoadingMore: Boolean = false,
     ) {
         val hasFilters: Boolean get() = maxPrice.isNotEmpty() || !inStockOnly
+        val canLoadMore: Boolean get() = phase == Phase.Results && !isLoadingMore && products.size >= limit && limit < MAX_LIMIT
     }
 
     private val _state = MutableStateFlow(State(market = prefs?.getString(MARKET_KEY, null) ?: ""))
@@ -64,7 +68,7 @@ class SearchViewModel(private val app: AppModel, private val prefs: SharedPrefer
             _state.update { it.copy(phase = Phase.Failed(MinLengthException())) }
             return
         }
-        _state.update { it.copy(query = text, searchedQuery = text, products = emptyList(), note = null, phase = Phase.Loading) }
+        _state.update { it.copy(query = text, searchedQuery = text, products = emptyList(), note = null, limit = FIRST_PAGE, phase = Phase.Loading) }
         viewModelScope.launch {
             try {
                 val args = arguments(_state.value, text)
@@ -81,17 +85,36 @@ class SearchViewModel(private val app: AppModel, private val prefs: SharedPrefer
         }
     }
 
-    fun reset() = _state.update { it.copy(products = emptyList(), note = null, phase = Phase.Idle) }
+    /** Re-runs the current query for the maximum page size (costs another search). */
+    fun loadMore() {
+        if (!_state.value.canLoadMore) return
+        _state.update { it.copy(limit = MAX_LIMIT, isLoadingMore = true) }
+        viewModelScope.launch {
+            try {
+                val s = _state.value
+                val result = SearchResult.from(
+                    app.call("search_products", arguments(s, s.searchedQuery), SearchResult.dtoSerializer()) { SearchResult.from(it).products.size },
+                )
+                _state.update { it.copy(products = result.products, note = result.note, isLoadingMore = false) }
+            } catch (e: Exception) {
+                _state.update { it.copy(limit = FIRST_PAGE, isLoadingMore = false, phase = Phase.Failed(e)) }
+            }
+        }
+    }
+
+    fun reset() = _state.update { it.copy(products = emptyList(), note = null, limit = FIRST_PAGE, phase = Phase.Idle) }
 
     class MinLengthException : Exception("Type at least 2 characters.")
 
     companion object {
         private const val MARKET_KEY = "zureqCountry"
+        const val FIRST_PAGE = 20
+        const val MAX_LIMIT = 50
 
         fun arguments(state: State, query: String): JsonObject {
             val args = mutableMapOf<String, kotlinx.serialization.json.JsonElement>(
                 "query" to JsonPrimitive(query),
-                "limit" to JsonPrimitive(20),
+                "limit" to JsonPrimitive(state.limit),
                 "inStockOnly" to JsonPrimitive(state.inStockOnly),
             )
             args.putAll(Location.arguments(state.market))

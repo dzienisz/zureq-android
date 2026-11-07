@@ -36,6 +36,7 @@
     <string name="search_empty_body_market">Nic nie pasuje do „%1$s” w: %2$s. Spróbuj innych słów, innego kraju lub mniejszej liczby filtrów.</string>
     <string name="search_failed">Wyszukiwanie nie powiodło się</string>
     <string name="search_try_again">Spróbuj ponownie</string>
+    <string name="search_show_more">Pokaż do %1$d wyników (3 kredyty)</string>
     <string name="search_min_chars">Wpisz co najmniej 2 znaki.</string>
     <string name="search_any_country">Dowolny kraj</string>
     <string name="search_any">Dowolny</string>
@@ -72,6 +73,7 @@
     <string name="product_shop">Sklep</string>
     <string name="product_price">Cena</string>
     <string name="product_stock">Dostępność</string>
+    <string name="product_price_net">Cena netto</string>
     <string name="product_price_info">Aktualność ceny</string>
     <string name="product_checking">Sprawdzam cenę na żywo…</string>
     <string name="product_variant">Wariant</string>

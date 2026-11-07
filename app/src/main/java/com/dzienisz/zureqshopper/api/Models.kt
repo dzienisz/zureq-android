@@ -80,6 +80,7 @@ data class ProductDetails(
     val name: String? = null,
     val description: String? = null,
     @Serializable(with = FlexibleDouble::class) val price: Double? = null,
+    @Serializable(with = FlexibleDouble::class) val priceNet: Double? = null,
     val currency: String? = null,
     val inStock: Boolean? = null,
     @SerialName("stockQty") @Serializable(with = FlexibleDouble::class) val stockQtyValue: Double? = null,

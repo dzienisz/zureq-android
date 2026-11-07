@@ -143,6 +143,20 @@ fun SearchScreen(app: AppModel, model: SearchViewModel, onOpenProduct: (Product)
                     state.note?.let { note ->
                         item { Text(note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp)) }
                     }
+                    if (state.canLoadMore) {
+                        item {
+                            androidx.compose.material3.OutlinedButton(
+                                onClick = { model.loadMore() },
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                            ) { Text(stringResource(R.string.search_show_more, SearchViewModel.MAX_LIMIT)) }
+                        }
+                    } else if (state.isLoadingMore) {
+                        item {
+                            Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.Center) {
+                                CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                            }
+                        }
+                    }
                 }
             }
         }

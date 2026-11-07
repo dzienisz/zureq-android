@@ -128,4 +128,17 @@ class ModelsTest {
         assertTrue(!ZureqException(ZureqException.Code.API_ERROR, "Nope").isRetryable)
         assertTrue(ZureqException(ZureqException.Code.CREDITS_EXHAUSTED).stopsBatch)
     }
+
+    @Test
+    fun decodesNetPrice() {
+        val d = ZureqClient.json.decodeFromString(ProductDetails.serializer(), """{"price":"123","priceNet":100,"currency":"PLN"}""")
+        assertEquals(123.0, d.price)
+        assertEquals(100.0, d.priceNet)
+    }
+
+    @Test
+    fun searchArgumentsUseStateLimit() {
+        val args = com.dzienisz.zureqshopper.ui.SearchViewModel.arguments(com.dzienisz.zureqshopper.ui.SearchViewModel.State(limit = 50), "tee")
+        assertEquals("50", args["limit"].toString())
+    }
 }

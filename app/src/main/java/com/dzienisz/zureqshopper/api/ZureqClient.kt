@@ -120,7 +120,8 @@ class ZureqClient(
                 }
                 return parse(response.body, response.status)
             } catch (e: ZureqException) {
-                if (e.isRetryable && attempt < 2) delay(retryDelayMs) else throw e
+                // docs.zureq.io: a 429 clears within the fixed one-minute window, so ~1 s is enough; shop timeouts get the full delay.
+                if (e.isRetryable && attempt < 2) delay(if (e.code == ZureqException.Code.RATE_LIMIT) minOf(retryDelayMs, 1_000) else retryDelayMs) else throw e
             }
         }
     }
