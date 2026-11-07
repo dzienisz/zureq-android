@@ -28,7 +28,7 @@ class ZureqAuthTest {
     private val prefs = FakePrefs()
     private val http = FakeHttp()
     private var clock = 1_700_000_000_000L
-    private val auth = ZureqAuth(secrets, prefs, http) { clock }
+    private val auth = ZureqAuth(secrets, prefs, http, now = { clock })
 
     private fun tokenJson(access: String, refresh: String = "r1", expiresIn: Int = 3600) =
         """{"access_token":"$access","refresh_token":"$refresh","expires_in":$expiresIn,"token_type":"Bearer"}"""
@@ -49,7 +49,7 @@ class ZureqAuthTest {
         val request = auth.startRequest()
         assertEquals("cid-1", request.clientId)
         assertEquals("${ZureqAuth.ISSUER}/api/oauth/register", http.calls.single().first)
-        assertTrue(http.calls.single().third.contains(ZureqAuth.REDIRECT_URI))
+        assertTrue(http.calls.single().third.contains(ZureqAuth.LOOPBACK_REDIRECT_URI))
         val params = ZureqAuth.queryParams(request.url)
         assertEquals("code", params["response_type"])
         assertEquals("S256", params["code_challenge_method"])
@@ -62,7 +62,7 @@ class ZureqAuthTest {
 
     @Test
     fun completeRejectsWrongState() = runTest {
-        val request = ZureqAuth.Request("u", "state1", "v", "cid")
+        val request = ZureqAuth.Request("u", "state1", "v", "cid", ZureqAuth.LOOPBACK_REDIRECT_URI)
         try {
             auth.complete(request, "http://localhost:47823/callback?code=abc&state=other")
             fail()
@@ -74,7 +74,7 @@ class ZureqAuthTest {
 
     @Test
     fun completeMapsAccessDeniedToCancelled() = runTest {
-        val request = ZureqAuth.Request("u", "s", "v", "cid")
+        val request = ZureqAuth.Request("u", "s", "v", "cid", ZureqAuth.LOOPBACK_REDIRECT_URI)
         try {
             auth.complete(request, "http://localhost:47823/callback?error=access_denied&state=s")
             fail()
@@ -86,7 +86,7 @@ class ZureqAuthTest {
     @Test
     fun completeExchangesCodeAndStoresTokens() = runTest {
         http.responses.addLast(HttpResponse(200, tokenJson("a1")))
-        val request = ZureqAuth.Request("u", "s", "verifier", "cid")
+        val request = ZureqAuth.Request("u", "s", "verifier", "cid", ZureqAuth.LOOPBACK_REDIRECT_URI)
         auth.complete(request, "http://localhost:47823/callback?code=abc&state=s")
         val (url, type, body) = http.calls.single()
         assertEquals("${ZureqAuth.ISSUER}/api/oauth/token", url)
@@ -99,7 +99,7 @@ class ZureqAuthTest {
     @Test
     fun accessTokenRefreshesWhenExpiring() = runTest {
         http.responses.addLast(HttpResponse(200, tokenJson("a1", expiresIn = 100)))
-        auth.complete(ZureqAuth.Request("u", "s", "v", "cid"), "http://localhost:47823/callback?code=abc&state=s")
+        auth.complete(ZureqAuth.Request("u", "s", "v", "cid", ZureqAuth.LOOPBACK_REDIRECT_URI), "http://localhost:47823/callback?code=abc&state=s")
         clock += 50_000
         http.responses.addLast(HttpResponse(200, tokenJson("a2", refresh = "r2")))
         assertEquals("a2", auth.accessToken())
@@ -111,7 +111,7 @@ class ZureqAuthTest {
     @Test
     fun refreshAfterStaleTokenSkipsWhenAlreadyFresh() = runTest {
         http.responses.addLast(HttpResponse(200, tokenJson("a1")))
-        auth.complete(ZureqAuth.Request("u", "s", "v", "cid"), "http://localhost:47823/callback?code=abc&state=s")
+        auth.complete(ZureqAuth.Request("u", "s", "v", "cid", ZureqAuth.LOOPBACK_REDIRECT_URI), "http://localhost:47823/callback?code=abc&state=s")
         assertEquals("a1", auth.refresh("old"))
         assertEquals(1, http.calls.size)
     }
@@ -119,7 +119,7 @@ class ZureqAuthTest {
     @Test
     fun invalidGrantEndsSession() = runTest {
         http.responses.addLast(HttpResponse(200, tokenJson("a1")))
-        auth.complete(ZureqAuth.Request("u", "s", "v", "cid"), "http://localhost:47823/callback?code=abc&state=s")
+        auth.complete(ZureqAuth.Request("u", "s", "v", "cid", ZureqAuth.LOOPBACK_REDIRECT_URI), "http://localhost:47823/callback?code=abc&state=s")
         http.responses.addLast(HttpResponse(400, """{"error":"invalid_grant"}"""))
         try {
             auth.refresh("a1")
@@ -133,13 +133,47 @@ class ZureqAuthTest {
     @Test
     fun forgetReturnsTokensForRevoke() = runTest {
         http.responses.addLast(HttpResponse(200, tokenJson("a1", refresh = "rr")))
-        auth.complete(ZureqAuth.Request("u", "s", "v", "cid"), "http://localhost:47823/callback?code=abc&state=s")
+        auth.complete(ZureqAuth.Request("u", "s", "v", "cid", ZureqAuth.LOOPBACK_REDIRECT_URI), "http://localhost:47823/callback?code=abc&state=s")
         val tokens = auth.forget()
         assertEquals("rr", tokens?.refresh)
         assertNull(auth.forget())
         auth.revoke(tokens!!)
         assertEquals("${ZureqAuth.ISSUER}/api/oauth/revoke", http.calls.last().first)
         assertTrue(http.calls.last().third.contains("token=rr"))
+    }
+
+
+    @Test
+    fun appRedirectBuildsAuthorizeUrlAndRegistersScheme() = runTest {
+        val appAuth = ZureqAuth(secrets, prefs, http, redirectUri = ZureqAuth.APP_REDIRECT_URI)
+        http.responses.addLast(HttpResponse(201, """{"client_id":"cid-app"}"""))
+        val request = appAuth.startRequest()
+        assertTrue(http.calls.single().third.contains(ZureqAuth.APP_REDIRECT_URI))
+        assertEquals(ZureqAuth.APP_REDIRECT_URI, ZureqAuth.queryParams(request.url)["redirect_uri"])
+        assertEquals(ZureqAuth.APP_REDIRECT_URI, request.redirectUri)
+    }
+
+    @Test
+    fun completeWithAppRedirectSendsItsRedirectUri() = runTest {
+        val appAuth = ZureqAuth(secrets, prefs, http, redirectUri = ZureqAuth.APP_REDIRECT_URI)
+        http.responses.addLast(HttpResponse(200, tokenJson("a1")))
+        val request = ZureqAuth.Request("u", "s", "v", "cid", ZureqAuth.APP_REDIRECT_URI)
+        appAuth.complete(request, "com.dzienisz.zureqshopper:/oauth?code=abc&state=s")
+        val body = http.calls.single().third
+        assertTrue(body.contains("redirect_uri=" + java.net.URLEncoder.encode(ZureqAuth.APP_REDIRECT_URI, "UTF-8")))
+        assertTrue(body.contains("code=abc"))
+    }
+
+    @Test
+    fun requestRoundTripsThroughJson() {
+        val request = ZureqAuth.Request("u", "s", "v", "cid", ZureqAuth.APP_REDIRECT_URI)
+        assertEquals(request, ZureqAuth.decodeRequest(ZureqAuth.encodeRequest(request)))
+        assertNull(ZureqAuth.decodeRequest("garbage"))
+    }
+
+    @Test
+    fun defaultRedirectIsLoopbackUntilEnabled() {
+        assertEquals(ZureqAuth.LOOPBACK_REDIRECT_URI, ZureqAuth.DEFAULT_REDIRECT_URI)
     }
 
     @Test

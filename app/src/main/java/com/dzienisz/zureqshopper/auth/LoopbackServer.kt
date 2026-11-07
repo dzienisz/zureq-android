@@ -19,7 +19,8 @@ class LoopbackServer(private val port: Int = ZureqAuth.CALLBACK_PORT) {
 
     /** Binds the port; throws if it is taken. */
     fun start() {
-        val server = ServerSocket(port, 1, InetAddress.getLoopbackAddress())
+        // Android's /etc/hosts maps "localhost" to 127.0.0.1 only; getLoopbackAddress() may pick ::1, which the browser never reaches.
+        val server = ServerSocket(port, 1, InetAddress.getByName("127.0.0.1"))
         socket = server
         Thread({ serve(server) }, "zureq-oauth-callback").apply { isDaemon = true }.start()
     }

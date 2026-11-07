@@ -16,6 +16,8 @@ import com.dzienisz.zureqshopper.auth.ZureqAuth
 import com.dzienisz.zureqshopper.data.SecretStore
 import com.dzienisz.zureqshopper.data.ShoppingList
 import com.dzienisz.zureqshopper.data.Watchlist
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -23,6 +25,12 @@ import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonObject
+
+sealed interface SignIn {
+    data object Idle : SignIn
+    data class Waiting(val request: ZureqAuth.Request) : SignIn
+    data class Failed(val error: Throwable) : SignIn
+}
 
 /** App-wide state: credentials, credits, markets and search history. One instance lives in [ZureqApp]. */
 class AppModel(
@@ -47,6 +55,9 @@ class AppModel(
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state
 
+    private val _signIn = MutableStateFlow<SignIn>(SignIn.Idle)
+    val signIn: StateFlow<SignIn> = _signIn
+
     val client: ZureqClient = ZureqClient(AppCredentials(), transport)
 
     init {
@@ -57,6 +68,51 @@ class AppModel(
             usesZureqSignIn = signedIn && !storedKey,
             history = prefs.getString(HISTORY_KEY, null)?.let { decodeList(it) } ?: emptyList(),
         )
+        // A loopback callback can't arrive after process death (nothing listens any more), so only a scheme redirect is resumable.
+        val pending = secrets.read(PENDING_SIGN_IN_ACCOUNT)?.let { ZureqAuth.decodeRequest(it) }
+        if (pending != null && !ZureqAuth.isLoopback(pending.redirectUri)) _signIn.value = SignIn.Waiting(pending) else secrets.delete(PENDING_SIGN_IN_ACCOUNT)
+    }
+
+    /** Starts Sign in with ZUREQ and remembers the pending request so it survives process death. */
+    suspend fun beginSignIn(): ZureqAuth.Request {
+        val request = auth.startRequest()
+        secrets.write(ZureqAuth.encodeRequest(request), PENDING_SIGN_IN_ACCOUNT)
+        _signIn.value = SignIn.Waiting(request)
+        return request
+    }
+
+    /** Finishes Sign in with ZUREQ once the browser redirected to [callback]; foreign redirects are ignored. */
+    suspend fun finishSignIn(callback: String) {
+        val request = (_signIn.value as? SignIn.Waiting)?.request
+            ?: secrets.read(PENDING_SIGN_IN_ACCOUNT)?.let { ZureqAuth.decodeRequest(it) }
+            ?: return
+        try {
+            try {
+                completeSignIn(request, callback)
+            } catch (e: ZureqException) {
+                // The network-block policy lifts asynchronously after the app returns to the front; retry once.
+                if (e.code != ZureqException.Code.NETWORK_ERROR) throw e
+                delay(1000)
+                completeSignIn(request, callback)
+            }
+            secrets.delete(PENDING_SIGN_IN_ACCOUNT)
+            _signIn.value = SignIn.Idle
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            secrets.delete(PENDING_SIGN_IN_ACCOUNT)
+            _signIn.value = SignIn.Failed(e)
+        }
+    }
+
+    fun cancelSignIn() {
+        secrets.delete(PENDING_SIGN_IN_ACCOUNT)
+        _signIn.value = SignIn.Idle
+    }
+
+    fun failSignIn(e: Throwable) {
+        secrets.delete(PENDING_SIGN_IN_ACCOUNT)
+        _signIn.value = SignIn.Failed(e)
     }
 
     /** Calls a tool and keeps the local credit counter in step with what ZUREQ charges. */
@@ -178,6 +234,7 @@ class AppModel(
 
     companion object {
         const val API_KEY_ACCOUNT = "zureqApiKey"
+        const val PENDING_SIGN_IN_ACCOUNT = "zureqOAuthPending"
         private const val HISTORY_KEY = "zureqHistory"
         private const val MARKETS_CACHE_KEY = "zureqMarketsCache"
         private const val MARKETS_SAVED_AT_KEY = "zureqMarketsSavedAt"

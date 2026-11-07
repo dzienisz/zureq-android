@@ -6,9 +6,15 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dzienisz.zureqshopper.MainActivity
+import com.dzienisz.zureqshopper.SignIn
 import com.dzienisz.zureqshopper.auth.LoopbackServer
+import com.dzienisz.zureqshopper.auth.ZureqAuth
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -91,52 +97,64 @@ private fun Feature(icon: ImageVector, text: String) {
     }
 }
 
-/** "Connect with Zureq" (OAuth in the browser, callback on localhost) with the API-key form folded underneath. */
+/**
+ * "Connect with Zureq" (OAuth in a Custom Tab) with the API-key form folded underneath. The callback arrives on
+ * the localhost [LoopbackServer] by default, or on the private-use URI scheme (RFC 8252 §7.1) handled by
+ * MainActivity once ZUREQ registers [ZureqAuth.APP_REDIRECT_URI] — flip [ZureqAuth.USE_APP_REDIRECT] to switch.
+ */
 @Composable
 fun SignInSection(model: AppModel) {
     val context = LocalContext.current
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
     val scope = rememberCoroutineScope()
     var job by remember { mutableStateOf<Job?>(null) }
     var server by remember { mutableStateOf<LoopbackServer?>(null) }
-    var error by remember { mutableStateOf<Throwable?>(null) }
+    val signIn by model.signIn.collectAsStateWithLifecycle()
     var showKey by remember { mutableStateOf(false) }
-    val waiting = job != null
+    val waiting = signIn is SignIn.Waiting
+    val error = (signIn as? SignIn.Failed)?.error
 
     fun cancel() {
         job?.cancel()
         job = null
         server?.stop()
         server = null
+        model.cancelSignIn()
     }
 
     fun signIn() {
         if (waiting) return
-        error = null
         job = scope.launch {
-            val loopback = LoopbackServer()
-            server = loopback
+            var loopback: LoopbackServer? = null
             try {
-                val request = model.auth.startRequest()
-                loopback.start()
-                CustomTabsIntent.Builder().setShowTitle(true).build().launchUrl(context, Uri.parse(request.url))
-                val callback = loopback.awaitCallback()
-                model.completeSignIn(request, callback)
-                context.startActivity(
-                    Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
-                )
+                val request = model.beginSignIn()
+                if (ZureqAuth.isLoopback(request.redirectUri)) {
+                    loopback = LoopbackServer().also { server = it; it.start() }
+                    CustomTabsIntent.Builder().setShowTitle(true).build().launchUrl(context, Uri.parse(request.url))
+                    val callback = loopback.awaitCallback()
+                    // Android 15+ blocks networking for backgrounded apps; come to the front before the token exchange.
+                    loopback.stop()
+                    context.startActivity(
+                        Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                    )
+                    lifecycle.currentStateFlow.first { it.isAtLeast(Lifecycle.State.RESUMED) }
+                    model.finishSignIn(callback)
+                } else {
+                    CustomTabsIntent.Builder().setShowTitle(true).build().launchUrl(context, Uri.parse(request.url))
+                }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
-                error = e
+                model.failSignIn(e)
             } finally {
-                loopback.stop()
+                loopback?.stop()
                 server = null
                 job = null
             }
         }
     }
 
-    DisposableEffect(Unit) { onDispose { cancel() } }
+    DisposableEffect(Unit) { onDispose { job?.cancel(); server?.stop() } }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (waiting) {

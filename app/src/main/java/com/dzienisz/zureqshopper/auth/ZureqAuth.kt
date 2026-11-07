@@ -55,11 +55,13 @@ class ZureqAuth(
     private val prefs: SharedPreferences,
     private val http: AuthHttp = OkHttpAuthHttp(),
     private val now: () -> Long = System::currentTimeMillis,
+    private val redirectUri: String = DEFAULT_REDIRECT_URI,
 ) {
     @Serializable
     data class Tokens(val access: String, val refresh: String, val expiresAt: Long, val clientId: String)
 
-    data class Request(val url: String, val state: String, val verifier: String, val clientId: String)
+    @Serializable
+    data class Request(val url: String, val state: String, val verifier: String, val clientId: String, val redirectUri: String)
 
     private val refreshLock = Mutex()
 
@@ -68,10 +70,10 @@ class ZureqAuth(
     suspend fun clientId(): String {
         FIXED_CLIENT_ID?.let { return it }
         val cachedId = prefs.getString(CLIENT_ID_KEY, null)
-        if (!cachedId.isNullOrEmpty() && prefs.getString(CLIENT_REDIRECT_KEY, null) == REDIRECT_URI) return cachedId
+        if (!cachedId.isNullOrEmpty() && prefs.getString(CLIENT_REDIRECT_KEY, null) == redirectUri) return cachedId
         val body = buildJsonObject {
             put("client_name", CLIENT_NAME)
-            putJsonArray("redirect_uris") { add(kotlinx.serialization.json.JsonPrimitive(REDIRECT_URI)) }
+            putJsonArray("redirect_uris") { add(kotlinx.serialization.json.JsonPrimitive(redirectUri)) }
             put("token_endpoint_auth_method", "none")
             putJsonArray("grant_types") { add(kotlinx.serialization.json.JsonPrimitive("authorization_code")); add(kotlinx.serialization.json.JsonPrimitive("refresh_token")) }
             putJsonArray("response_types") { add(kotlinx.serialization.json.JsonPrimitive("code")) }
@@ -80,7 +82,7 @@ class ZureqAuth(
         val (status, json) = send("$ISSUER/api/oauth/register", "application/json", body.toString())
         val id = json?.get("client_id")?.jsonPrimitive?.content
         if (status !in 200..299 || id.isNullOrEmpty()) throw ZureqException(ZureqException.Code.AUTH_FAILED)
-        prefs.edit().putString(CLIENT_ID_KEY, id).putString(CLIENT_REDIRECT_KEY, REDIRECT_URI).apply()
+        prefs.edit().putString(CLIENT_ID_KEY, id).putString(CLIENT_REDIRECT_KEY, redirectUri).apply()
         return id
     }
 
@@ -92,7 +94,7 @@ class ZureqAuth(
             mapOf(
                 "response_type" to "code",
                 "client_id" to clientId,
-                "redirect_uri" to REDIRECT_URI,
+                "redirect_uri" to redirectUri,
                 "code_challenge" to challenge(verifier),
                 "code_challenge_method" to "S256",
                 "scope" to "mcp",
@@ -100,7 +102,7 @@ class ZureqAuth(
                 "resource" to RESOURCE,
             ),
         )
-        return Request(url, state, verifier, clientId)
+        return Request(url, state, verifier, clientId, redirectUri)
     }
 
     /** Checks the redirect the browser came back with and exchanges its code for tokens. */
@@ -115,7 +117,7 @@ class ZureqAuth(
                 "grant_type" to "authorization_code",
                 "code" to code,
                 "client_id" to request.clientId,
-                "redirect_uri" to REDIRECT_URI,
+                "redirect_uri" to request.redirectUri,
                 "code_verifier" to request.verifier,
                 "resource" to RESOURCE,
             ),
@@ -164,6 +166,7 @@ class ZureqAuth(
         val response = try {
             http.post(url, contentType, body)
         } catch (e: IOException) {
+            android.util.Log.w("ZureqAuth", "POST $url failed: ${e.javaClass.simpleName}: ${e.message}")
             throw ZureqException(ZureqException.Code.NETWORK_ERROR)
         }
         val json = runCatching { Json.parseToJsonElement(response.body) as? JsonObject }.getOrNull()
@@ -189,7 +192,15 @@ class ZureqAuth(
         const val RESOURCE = "https://api.zureq.io/mcp"
         const val CALLBACK_PORT = 47823
         /** chat.zureq.io rewrites 127.0.0.1 to localhost when it sends the user through login, so register localhost. */
-        const val REDIRECT_URI = "http://localhost:$CALLBACK_PORT/callback"
+        const val LOOPBACK_REDIRECT_URI = "http://localhost:$CALLBACK_PORT/callback"
+        const val APP_SCHEME = "com.dzienisz.zureqshopper"
+        /** Private-use scheme redirect (RFC 8252 §7.1). Needs ZUREQ to register it for FIXED_CLIENT_ID; until then the loopback redirect is used. */
+        const val APP_REDIRECT_URI = "$APP_SCHEME:/oauth"
+        const val USE_APP_REDIRECT = false
+        val DEFAULT_REDIRECT_URI = if (USE_APP_REDIRECT) APP_REDIRECT_URI else LOOPBACK_REDIRECT_URI
+        fun isLoopback(redirectUri: String) = redirectUri.startsWith("http://localhost")
+        fun encodeRequest(r: Request): String = Json.encodeToString(Request.serializer(), r)
+        fun decodeRequest(s: String): Request? = runCatching { Json.decodeFromString(Request.serializer(), s) }.getOrNull()
         /** A pre-registered client_id from hello@zureq.io; until there is one the app registers itself (RFC 7591). */
         val FIXED_CLIENT_ID: String? = null
         const val CLIENT_NAME = "ZUREQ Shopper for Android"
