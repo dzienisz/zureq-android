@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -16,16 +17,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -127,7 +127,6 @@ fun ShoppingListScreen(app: AppModel) {
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.list_title)) },
-                navigationIcon = { MarketMenu(app, state.market, list::setMarket) },
                 actions = {
                     if (state.text.isNotEmpty()) {
                         TextButton(onClick = { list.clear() }, enabled = !state.isSearching) {
@@ -142,7 +141,10 @@ fun ShoppingListScreen(app: AppModel) {
         LazyColumn(Modifier.padding(padding).fillMaxSize()) {
             item {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(stringResource(R.string.list_items), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.list_items), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                        MarketMenu(app, state.market, list::setMarket)
+                    }
                     OutlinedTextField(
                         value = state.text,
                         onValueChange = list::setText,
@@ -150,9 +152,15 @@ fun ShoppingListScreen(app: AppModel) {
                         minLines = 3,
                         maxLines = 10,
                         enabled = !state.isSearching,
+                        shape = MaterialTheme.shapes.medium,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        ),
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    Button(onClick = { search() }, enabled = state.canSearch, modifier = Modifier.fillMaxWidth()) {
+                    Button(onClick = { search() }, enabled = state.canSearch, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth().height(52.dp)) {
                         if (state.isSearching) {
                             CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                             Spacer(Modifier.width(8.dp))
@@ -182,16 +190,14 @@ fun ShoppingListScreen(app: AppModel) {
             }
             state.parts.forEach { part ->
                 item(key = "part-${part.id}") {
-                    HorizontalDivider()
-                    Text(part.query, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(16.dp, 12.dp, 16.dp, 4.dp))
+                    Text(part.query, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 4.dp))
                     PartRows(part, loading = part.id in state.loadingDetails, select = { select(it, part) }, setVariant = { list.setVariant(it, part.id) })
                 }
             }
             val groups = state.groups
             if (groups.isNotEmpty()) {
                 item {
-                    HorizontalDivider()
-                    Text(stringResource(R.string.list_by_shop), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(16.dp, 12.dp, 16.dp, 4.dp))
+                    Text(stringResource(R.string.list_by_shop), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(16.dp, 20.dp, 16.dp, 4.dp))
                 }
                 groups.forEach { group ->
                     item(key = "shop-${group.shopId}") {
@@ -232,10 +238,10 @@ private fun PartRows(part: ListPart, loading: Boolean, select: (Product) -> Unit
             Icon(
                 if (picked) Icons.Filled.CheckCircle else Icons.Outlined.Circle,
                 contentDescription = null,
-                tint = if (picked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                tint = if (picked) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outline,
                 modifier = Modifier.padding(start = 16.dp),
             )
-            ProductRow(product) { select(product) }
+            ProductRow(product, Modifier.padding(start = 12.dp, end = 16.dp, top = 4.dp, bottom = 4.dp)) { select(product) }
         }
         if (picked) {
             Column(Modifier.padding(start = 56.dp, end = 16.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -275,7 +281,7 @@ private fun ShopGroupCard(
     onCheckout: () -> Unit,
     onOpen: (String) -> Unit,
 ) {
-    Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
+    ListCard(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(group.shopName, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
@@ -288,7 +294,7 @@ private fun ShopGroupCard(
             group.parts.forEach { part ->
                 Text("${part.query}: ${part.pick?.name.orEmpty()}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
             }
-            Button(onClick = onCheckout, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = onCheckout, enabled = !busy, shape = MaterialTheme.shapes.small, modifier = Modifier.fillMaxWidth()) {
                 if (busy) {
                     CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                     Spacer(Modifier.width(8.dp))
@@ -311,7 +317,7 @@ private fun ShopGroupCard(
                 val base = if (cart.count == 1) stringResource(R.string.list_cart) else stringResource(R.string.list_cart_n, cart.index + 1, cart.count)
                 val label = cart.query?.let { "$base: $it" } ?: base
                 if (cart.url != null) {
-                    OutlinedButton(onClick = { onOpen(cart.url) }, modifier = Modifier.fillMaxWidth()) { Text("${stringResource(R.string.list_open)} · $label") }
+                    OutlinedButton(onClick = { onOpen(cart.url) }, shape = MaterialTheme.shapes.small, modifier = Modifier.fillMaxWidth()) { Text("${stringResource(R.string.list_open)} · $label") }
                 } else {
                     Text("$label: ${errorText(cart.error)}", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }

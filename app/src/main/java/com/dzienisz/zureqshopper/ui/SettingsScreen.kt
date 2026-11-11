@@ -9,12 +9,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -32,9 +37,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dzienisz.zureqshopper.AppModel
 import com.dzienisz.zureqshopper.BuildConfig
@@ -54,36 +61,55 @@ fun SettingsScreen(app: AppModel) {
     Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.settings_title)) }) }) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState())) {
             Header(stringResource(R.string.credits_title))
-            CreditsSummary(state.usage, state.sessionCredits, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
-            HorizontalDivider(Modifier.padding(top = 8.dp))
+            ListCard(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                CreditsSummary(state.usage, state.sessionCredits, Modifier.padding(16.dp))
+            }
             Header(stringResource(R.string.settings_account))
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.settings_connected_with)) },
-                trailingContent = { Text(stringResource(if (state.usesZureqSignIn) R.string.settings_zureq_account else R.string.settings_api_key)) },
-            )
-            ListItem(
-                headlineContent = {
-                    Text(
-                        stringResource(if (state.usesZureqSignIn) R.string.settings_disconnect_account else R.string.settings_disconnect_key),
-                        color = MaterialTheme.colorScheme.error,
+            val rowColors = ListItemDefaults.colors(containerColor = Color.Transparent)
+            ListCard(Modifier.padding(horizontal = 16.dp)) {
+                Column {
+                    ListItem(
+                        colors = rowColors,
+                        headlineContent = { Text(stringResource(R.string.settings_connected_with)) },
+                        trailingContent = { Text(stringResource(if (state.usesZureqSignIn) R.string.settings_zureq_account else R.string.settings_api_key)) },
                     )
-                },
-                modifier = Modifier.clickable { confirmRemove = true },
-            )
-            HorizontalDivider()
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    ListItem(
+                        colors = rowColors,
+                        headlineContent = {
+                            Text(
+                                stringResource(if (state.usesZureqSignIn) R.string.settings_disconnect_account else R.string.settings_disconnect_key),
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        },
+                        modifier = Modifier.clickable { confirmRemove = true },
+                    )
+                }
+            }
             Header(stringResource(R.string.settings_about))
-            ListItem(
-                headlineContent = { Text("zureq.io", color = MaterialTheme.colorScheme.primary) },
-                modifier = Modifier.clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://zureq.io"))) },
-            )
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.settings_docs), color = MaterialTheme.colorScheme.primary) },
-                modifier = Modifier.clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://docs.zureq.io"))) },
-            )
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.settings_version)) },
-                trailingContent = { Text(BuildConfig.VERSION_NAME) },
-            )
+            ListCard(Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
+                Column {
+                    ListItem(
+                        colors = rowColors,
+                        headlineContent = { Text("zureq.io") },
+                        trailingContent = { Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                        modifier = Modifier.clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://zureq.io"))) },
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    ListItem(
+                        colors = rowColors,
+                        headlineContent = { Text(stringResource(R.string.settings_docs)) },
+                        trailingContent = { Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                        modifier = Modifier.clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://docs.zureq.io"))) },
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    ListItem(
+                        colors = rowColors,
+                        headlineContent = { Text(stringResource(R.string.settings_version)) },
+                        trailingContent = { Text(BuildConfig.VERSION_NAME) },
+                    )
+                }
+            }
         }
     }
     if (confirmRemove) {
@@ -105,10 +131,10 @@ fun SettingsScreen(app: AppModel) {
 @Composable
 private fun Header(text: String) {
     Text(
-        text,
-        style = MaterialTheme.typography.titleSmall,
+        text.uppercase(),
+        style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 0.1.em),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
+        modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 8.dp),
     )
 }
 
@@ -121,7 +147,7 @@ fun CreditsSummary(usage: Usage?, sessionCredits: Double, modifier: Modifier = M
         }
         val state = Credits.state(usage)
         Row(Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.credits_left, Credits.format(usage.remaining)), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            Text(stringResource(R.string.credits_left, Credits.format(usage.remaining)), style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"), modifier = Modifier.weight(1f))
             usage.plan?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
         val included = usage.included
@@ -130,6 +156,7 @@ fun CreditsSummary(usage: Usage?, sessionCredits: Double, modifier: Modifier = M
             LinearProgressIndicator(
                 progress = { (used / included).toFloat().coerceIn(0f, 1f) },
                 color = creditsTint(state),
+                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)),
             )
             Text(

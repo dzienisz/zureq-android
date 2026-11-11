@@ -1,9 +1,9 @@
 package com.dzienisz.zureqshopper.ui
 
 import android.text.format.DateUtils
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,7 +19,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -93,7 +92,11 @@ fun WatchlistScreen(app: AppModel, onOpen: (Product) -> Unit) {
                 modifier = Modifier.padding(padding).fillMaxSize(),
             )
         } else {
-            LazyColumn(Modifier.padding(padding).fillMaxSize()) {
+            LazyColumn(
+                Modifier.padding(padding).fillMaxSize(),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 state.refreshError?.let { error ->
                     item {
                         Text(
@@ -103,20 +106,19 @@ fun WatchlistScreen(app: AppModel, onOpen: (Product) -> Unit) {
                             },
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            modifier = Modifier.padding(vertical = 4.dp),
                         )
                     }
                 }
                 items(state.items, key = { it.id }) { item ->
                     WatchRow(item, onClick = { onOpen(item.product) }, onRemove = { watchlist.remove(item.product) })
-                    HorizontalDivider()
                 }
                 item {
                     Text(
                         pluralStringResource(R.plurals.watchlist_footer, state.items.size, state.items.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(vertical = 8.dp),
                     )
                 }
             }
@@ -127,49 +129,51 @@ fun WatchlistScreen(app: AppModel, onOpen: (Product) -> Unit) {
 @Composable
 private fun WatchRow(item: WatchedItem, onClick: () -> Unit, onRemove: () -> Unit) {
     val product = item.product
-    Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.Top,
-    ) {
-        ProductImage(product.imageUrl, 64.dp)
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(product.name, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(product.shopName ?: product.shopId, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(PriceFormat.string(product.price, product.currency), style = MaterialTheme.typography.titleMedium)
-                item.priceChange?.let { change ->
-                    val down = change < 0
-                    val tint = if (down) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error
-                    Icon(
-                        if (down) Icons.Filled.ArrowDownward else Icons.Filled.ArrowUpward,
-                        contentDescription = stringResource(if (down) R.string.watchlist_price_down else R.string.watchlist_price_up),
-                        tint = tint,
-                        modifier = Modifier.size(14.dp),
-                    )
-                    Text(
-                        PriceFormat.string(abs(change), product.currency),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = tint,
-                    )
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (product.inStock == false) {
-                    Text(stringResource(R.string.out_of_stock), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
-                }
+    ListCard(onClick = onClick) {
+        Row(Modifier.padding(start = 10.dp, top = 10.dp, bottom = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+            ProductImage(product.imageUrl, 72.dp)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(product.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(
-                    item.checkedAt?.let {
-                        stringResource(R.string.watchlist_checked, DateUtils.getRelativeTimeSpanString(it).toString())
-                    } ?: stringResource(R.string.watchlist_not_checked),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline,
+                    product.shopName ?: product.shopId,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    PriceText(product.price, product.currency)
+                    item.priceChange?.let { change ->
+                        val down = change < 0
+                        val tint = if (down) Color(0xFF19804A) else MaterialTheme.colorScheme.error
+                        Icon(
+                            if (down) Icons.Filled.ArrowDownward else Icons.Filled.ArrowUpward,
+                            contentDescription = stringResource(if (down) R.string.watchlist_price_down else R.string.watchlist_price_up),
+                            tint = tint,
+                            modifier = Modifier.size(14.dp),
+                        )
+                        Text(
+                            PriceFormat.string(abs(change), product.currency),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = tint,
+                        )
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (product.inStock == false) OutOfStockChip()
+                    Text(
+                        item.checkedAt?.let {
+                            stringResource(R.string.watchlist_checked, DateUtils.getRelativeTimeSpanString(it).toString())
+                        } ?: stringResource(R.string.watchlist_not_checked),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                }
             }
-        }
-        IconButton(onClick = onRemove) {
-            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.remove), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            IconButton(onClick = onRemove) {
+                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.remove), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+            }
         }
     }
 }

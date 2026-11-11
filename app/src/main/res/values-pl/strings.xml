@@ -45,7 +45,6 @@
     <string name="sort_mixed_currencies">Ceny są w różnych walutach, więc sortowanie działa w obrębie każdej waluty.</string>
     <string name="search_min_chars">Wpisz co najmniej 2 znaki.</string>
     <string name="search_any_country">Dowolny kraj</string>
-    <string name="search_any">Dowolny</string>
     <string name="search_market_a11y">Kraj: %1$s</string>
     <string name="filters_title">Filtry</string>
     <string name="filters_max_price">Maks. cena</string>
@@ -76,8 +75,6 @@
 
     <!-- Product -->
     <string name="product_title">Produkt</string>
-    <string name="product_shop">Sklep</string>
-    <string name="product_price">Cena</string>
     <string name="product_stock">Dostępność</string>
     <string name="product_price_net">Cena netto</string>
     <string name="product_price_info">Aktualność ceny</string>

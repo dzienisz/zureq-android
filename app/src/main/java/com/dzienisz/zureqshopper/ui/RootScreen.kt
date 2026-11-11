@@ -1,5 +1,6 @@
 package com.dzienisz.zureqshopper.ui
 
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
@@ -84,7 +85,7 @@ fun RootScreen(model: AppModel) {
             }
         },
     ) { padding ->
-        NavHost(navController, startDestination = Tab.Search.route, modifier = Modifier.padding(padding)) {
+        NavHost(navController, startDestination = Tab.Search.route, modifier = Modifier.padding(padding).consumeWindowInsets(padding)) {
             val openProduct: (Product) -> Unit = { product ->
                 val encoded = URLEncoder.encode(ZureqClient.json.encodeToString(Product.serializer(), product), "UTF-8")
                 navController.navigate("product/$encoded")

@@ -1,6 +1,12 @@
 package com.dzienisz.zureqshopper.ui
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -23,15 +29,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import com.dzienisz.zureqshopper.AppModel
 import com.dzienisz.zureqshopper.R
 import com.dzienisz.zureqshopper.api.Credits
 import com.dzienisz.zureqshopper.api.FreshnessLabel
+import com.dzienisz.zureqshopper.api.PriceFormat
 import com.dzienisz.zureqshopper.api.StockLabel
 import com.dzienisz.zureqshopper.api.Usage
 import com.dzienisz.zureqshopper.api.ZureqException
@@ -76,7 +87,7 @@ fun freshnessText(label: FreshnessLabel): String? = when (label) {
 
 @Composable
 fun creditsTint(state: Credits.State): Color = when (state) {
-    Credits.State.OK -> MaterialTheme.colorScheme.primary
+    Credits.State.OK -> MaterialTheme.colorScheme.secondary
     Credits.State.LOW -> Color(0xFFE08A00)
     Credits.State.EXHAUSTED -> MaterialTheme.colorScheme.error
 }
@@ -96,7 +107,9 @@ fun CreditsBadge(usage: Usage?, modifier: Modifier = Modifier, sessionCredits: D
     var open by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     AssistChip(
         onClick = { open = true },
-        label = { Text(text) },
+        label = { Text(text, style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum")) },
+        shape = RoundedCornerShape(50),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         leadingIcon = {
             Surface(shape = RoundedCornerShape(50), color = creditsTint(state), modifier = Modifier.size(8.dp)) {}
         },
@@ -114,14 +127,14 @@ fun CreditsBadge(usage: Usage?, modifier: Modifier = Modifier, sessionCredits: D
     }
 }
 
+/** Product photos are shot for a white backdrop, so the tile stays white in dark mode too. */
 @Composable
 fun ProductImage(url: String?, size: Dp, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(8.dp)
     SubcomposeAsyncImage(
         model = url,
         contentDescription = null,
         contentScale = ContentScale.Fit,
-        modifier = modifier.size(size).clip(shape),
+        modifier = modifier.size(size).clip(MaterialTheme.shapes.small).background(Color.White),
         error = { Placeholder() },
         loading = { Placeholder() },
     )
@@ -129,10 +142,53 @@ fun ProductImage(url: String?, size: Dp, modifier: Modifier = Modifier) {
 
 @Composable
 private fun Placeholder() {
-    Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxSize()) {
-        Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Filled.Image, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
-        }
+    Box(Modifier.fillMaxSize().background(Color(0xFFF1F3F4)), contentAlignment = Alignment.Center) {
+        Icon(Icons.Filled.Image, contentDescription = null, tint = Color(0xFFA3A9AE))
+    }
+}
+
+/** The ZUREQ mark; the launcher foreground carries adaptive-icon padding, so it is drawn oversized and clipped. */
+@Composable
+fun BrandMark(size: Dp, modifier: Modifier = Modifier) {
+    Box(modifier.size(size).clip(RoundedCornerShape(size * 0.24f)).background(Color.Black), contentAlignment = Alignment.Center) {
+        Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.requiredSize(size * 1.42f))
+    }
+}
+
+@Composable
+fun BrandLockup(modifier: Modifier = Modifier) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        BrandMark(30.dp)
+        Text("ZUREQ", style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 0.14.em))
+        Text("Shopper", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** Bordered card used for product rows and grouped content. */
+@Composable
+fun ListCard(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, content: @Composable () -> Unit) {
+    val shape = MaterialTheme.shapes.medium
+    val color = MaterialTheme.colorScheme.surfaceContainerLowest
+    val border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    if (onClick != null) Surface(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = shape, color = color, border = border, content = content)
+    else Surface(modifier = modifier.fillMaxWidth(), shape = shape, color = color, border = border, content = content)
+}
+
+@Composable
+fun PriceText(price: Double?, currency: String?, modifier: Modifier = Modifier, style: TextStyle = MaterialTheme.typography.titleMedium) {
+    Text(PriceFormat.string(price, currency), style = style.copy(fontWeight = FontWeight.SemiBold, fontFeatureSettings = "tnum"), modifier = modifier)
+}
+
+@Composable
+fun OutOfStockChip() {
+    Surface(shape = RoundedCornerShape(50), color = Color.Transparent, border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f))) {
+        Text(
+            stringResource(R.string.out_of_stock),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+        )
     }
 }
 
