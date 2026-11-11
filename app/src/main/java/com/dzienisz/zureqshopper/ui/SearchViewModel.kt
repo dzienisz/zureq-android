@@ -12,6 +12,7 @@ import com.dzienisz.zureqshopper.api.PriceFormat
 import com.dzienisz.zureqshopper.api.Product
 import com.dzienisz.zureqshopper.api.SearchResult
 import com.dzienisz.zureqshopper.api.ZureqException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -40,10 +41,21 @@ class SearchViewModel(private val app: AppModel, private val prefs: SharedPrefer
         /** search_products returns at most 50 rows; the first page asks for 20 and "Show more" re-runs the query for 50. */
         val limit: Int = FIRST_PAGE,
         val isLoadingMore: Boolean = false,
+        val loadMoreError: Throwable? = null,
+        val sort: Sort = Sort.Relevance,
     ) {
+        /** Rows in the chosen order. Sorting is local, so it costs no credits. */
+        val sortedProducts: List<Product> get() = sorted(products, sort)
+        /** True when the results mix currencies, so prices only compare within one currency. */
+        val hasMixedCurrencies: Boolean get() = products.mapNotNull { it.currency }.distinct().size > 1
         val hasFilters: Boolean get() = maxPrice.isNotEmpty() || !inStockOnly
         val canLoadMore: Boolean get() = phase == Phase.Results && !isLoadingMore && products.size >= limit && limit < MAX_LIMIT
     }
+
+    enum class Sort { Relevance, PriceLowToHigh, PriceHighToLow }
+
+    /** Bumped by every search and reset, so an answer to an older request is dropped. */
+    private var generation = 0
 
     private val _state = MutableStateFlow(State(market = prefs?.getString(MARKET_KEY, null) ?: ""))
     val state: StateFlow<State> = _state
@@ -60,6 +72,7 @@ class SearchViewModel(private val app: AppModel, private val prefs: SharedPrefer
 
     fun setMaxPrice(value: String) = _state.update { it.copy(maxPrice = value) }
     fun setInStockOnly(value: Boolean) = _state.update { it.copy(inStockOnly = value) }
+    fun setSort(value: Sort) = _state.update { it.copy(sort = value) }
     fun resetFilters() = _state.update { it.copy(maxPrice = "", inStockOnly = true) }
 
     fun search(raw: String? = null) {
@@ -68,41 +81,61 @@ class SearchViewModel(private val app: AppModel, private val prefs: SharedPrefer
             _state.update { it.copy(phase = Phase.Failed(MinLengthException())) }
             return
         }
-        _state.update { it.copy(query = text, searchedQuery = text, products = emptyList(), note = null, limit = FIRST_PAGE, phase = Phase.Loading) }
+        val request = ++generation
+        _state.update {
+            it.copy(
+                query = text, searchedQuery = text, products = emptyList(), note = null, limit = FIRST_PAGE,
+                isLoadingMore = false, loadMoreError = null, phase = Phase.Loading,
+            )
+        }
         viewModelScope.launch {
             try {
                 val args = arguments(_state.value, text)
                 val result = SearchResult.from(
                     app.call("search_products", args, SearchResult.dtoSerializer()) { SearchResult.from(it).products.size },
                 )
+                if (request != generation) return@launch
                 app.addHistory(text)
                 _state.update {
                     it.copy(products = result.products, note = result.note, phase = if (result.products.isEmpty()) Phase.Empty else Phase.Results)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                _state.update { it.copy(phase = Phase.Failed(e)) }
+                if (request == generation) _state.update { it.copy(phase = Phase.Failed(e)) }
             }
         }
     }
 
-    /** Re-runs the current query for the maximum page size (costs another search). */
+    /** Re-runs the current query for the maximum page size (costs another search). The rows on screen stay if it fails. */
     fun loadMore() {
         if (!_state.value.canLoadMore) return
-        _state.update { it.copy(limit = MAX_LIMIT, isLoadingMore = true) }
+        val request = generation
+        _state.update { it.copy(limit = MAX_LIMIT, isLoadingMore = true, loadMoreError = null) }
         viewModelScope.launch {
             try {
                 val s = _state.value
                 val result = SearchResult.from(
                     app.call("search_products", arguments(s, s.searchedQuery), SearchResult.dtoSerializer()) { SearchResult.from(it).products.size },
                 )
-                _state.update { it.copy(products = result.products, note = result.note, isLoadingMore = false) }
+                if (request != generation) return@launch
+                _state.update {
+                    it.copy(products = result.products.ifEmpty { it.products }, note = result.note, isLoadingMore = false)
+                }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                _state.update { it.copy(limit = FIRST_PAGE, isLoadingMore = false, phase = Phase.Failed(e)) }
+                if (request == generation) _state.update { it.copy(limit = FIRST_PAGE, isLoadingMore = false, loadMoreError = e) }
             }
         }
     }
 
-    fun reset() = _state.update { it.copy(products = emptyList(), note = null, limit = FIRST_PAGE, phase = Phase.Idle) }
+    fun reset() {
+        generation++
+        _state.update {
+            it.copy(products = emptyList(), note = null, limit = FIRST_PAGE, isLoadingMore = false, loadMoreError = null, phase = Phase.Idle)
+        }
+    }
 
     class MinLengthException : Exception("Type at least 2 characters.")
 
@@ -110,6 +143,17 @@ class SearchViewModel(private val app: AppModel, private val prefs: SharedPrefer
         private const val MARKET_KEY = "zureqCountry"
         const val FIRST_PAGE = 20
         const val MAX_LIMIT = 50
+
+        /** Prices are not converted: rows are grouped by currency (most common first), then ordered by price; unpriced rows go last. */
+        fun sorted(products: List<Product>, sort: Sort): List<Product> {
+            if (sort == Sort.Relevance) return products
+            val counts = products.filter { it.price != null }.groupingBy { it.currency.orEmpty() }.eachCount()
+            val rank = counts.keys.sortedWith(compareByDescending<String> { counts.getValue(it) }.thenBy { it })
+                .withIndex().associate { it.value to it.index }
+            val byPrice = if (sort == Sort.PriceLowToHigh) compareBy<Product> { it.price } else compareByDescending { it.price }
+            val (priced, unpriced) = products.partition { it.price != null }
+            return priced.sortedWith(compareBy<Product> { rank.getValue(it.currency.orEmpty()) }.then(byPrice)) + unpriced
+        }
 
         fun arguments(state: State, query: String): JsonObject {
             val args = mutableMapOf<String, kotlinx.serialization.json.JsonElement>(

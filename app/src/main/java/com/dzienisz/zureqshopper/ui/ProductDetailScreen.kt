@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -86,9 +88,12 @@ fun ProductDetailScreen(app: AppModel, initial: Product, onBack: () -> Unit) {
     val watchState by app.watchlist.state.collectAsStateWithLifecycle()
     val watched = watchState.items.any { it.id == initial.id }
 
-    LaunchedEffect(initial.id) {
+    var attempt by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(initial.id, attempt) {
         if (details != null) return@LaunchedEffect
         loading = true
+        loadError = null
         try {
             val live = app.call(
                 "get_product",
@@ -196,7 +201,8 @@ fun ProductDetailScreen(app: AppModel, initial: Product, onBack: () -> Unit) {
                     }
                     loadError != null -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
-                        Text(errorText(loadError, R.string.product_load_failed), color = MaterialTheme.colorScheme.tertiary)
+                        Text(errorText(loadError, R.string.product_load_failed), color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.weight(1f))
+                        TextButton(onClick = { attempt++ }) { Text(stringResource(R.string.search_try_again)) }
                     }
                 }
                 val variants = details?.variants.orEmpty()

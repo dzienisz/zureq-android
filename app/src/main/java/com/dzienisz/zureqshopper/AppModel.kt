@@ -191,6 +191,12 @@ class AppModel(
         prefs.edit().putString(HISTORY_KEY, ZureqClient.json.encodeToString(ListSerializer(String.serializer()), history)).apply()
     }
 
+    fun removeHistory(query: String) {
+        val history = _state.value.history - query
+        _state.update { it.copy(history = history) }
+        prefs.edit().putString(HISTORY_KEY, ZureqClient.json.encodeToString(ListSerializer(String.serializer()), history)).apply()
+    }
+
     fun clearHistory() {
         _state.update { it.copy(history = emptyList()) }
         prefs.edit().remove(HISTORY_KEY).apply()

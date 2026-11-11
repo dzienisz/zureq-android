@@ -37,6 +37,12 @@
     <string name="search_failed">Wyszukiwanie nie powiodło się</string>
     <string name="search_try_again">Spróbuj ponownie</string>
     <string name="search_show_more">Pokaż do %1$d wyników (3 kredyty)</string>
+    <string name="search_remove_recent">Usuń %1$s z ostatnich wyszukiwań</string>
+    <string name="sort_title">Sortuj</string>
+    <string name="sort_relevance">Trafność</string>
+    <string name="sort_price_low">Cena: od najniższej</string>
+    <string name="sort_price_high">Cena: od najwyższej</string>
+    <string name="sort_mixed_currencies">Ceny są w różnych walutach, więc sortowanie działa w obrębie każdej waluty.</string>
     <string name="search_min_chars">Wpisz co najmniej 2 znaki.</string>
     <string name="search_any_country">Dowolny kraj</string>
     <string name="search_any">Dowolny</string>

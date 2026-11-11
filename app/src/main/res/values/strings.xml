@@ -39,6 +39,12 @@
     <string name="search_failed">Search failed</string>
     <string name="search_try_again">Try again</string>
     <string name="search_show_more">Show up to %1$d results (3 credits)</string>
+    <string name="search_remove_recent">Remove %1$s from recent searches</string>
+    <string name="sort_title">Sort</string>
+    <string name="sort_relevance">Relevance</string>
+    <string name="sort_price_low">Price: low to high</string>
+    <string name="sort_price_high">Price: high to low</string>
+    <string name="sort_mixed_currencies">Prices are in different currencies, so they are sorted within each currency.</string>
     <string name="search_min_chars">Type at least 2 characters.</string>
     <string name="search_any_country">Any country</string>
     <string name="search_any">Any</string>

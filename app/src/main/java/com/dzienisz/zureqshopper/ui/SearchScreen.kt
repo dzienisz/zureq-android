@@ -17,11 +17,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -82,6 +84,7 @@ fun SearchScreen(app: AppModel, model: SearchViewModel, onOpenProduct: (Product)
                 title = { Text(stringResource(R.string.search_title)) },
                 navigationIcon = { MarketMenu(app, state.market, model::setMarket) },
                 actions = {
+                    if (state.phase == SearchViewModel.Phase.Results) SortMenu(state.sort, model::setSort)
                     IconButton(onClick = { showFilters = true }) {
                         Icon(
                             Icons.Filled.FilterList,
@@ -136,9 +139,15 @@ fun SearchScreen(app: AppModel, model: SearchViewModel, onOpenProduct: (Product)
                     Button(onClick = { model.search() }, modifier = Modifier.padding(top = 12.dp)) { Text(stringResource(R.string.search_try_again)) }
                 }
                 SearchViewModel.Phase.Results -> LazyColumn(Modifier.fillMaxSize()) {
-                    items(state.products, key = { it.id }) { product ->
+                    items(state.sortedProducts, key = { it.id }) { product ->
                         ProductRow(product, onClick = { onOpenProduct(product) })
                         HorizontalDivider()
+                    }
+                    if (state.sort != SearchViewModel.Sort.Relevance && state.hasMixedCurrencies) {
+                        item { Text(stringResource(R.string.sort_mixed_currencies), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) }
+                    }
+                    state.loadMoreError?.let { error ->
+                        item { Text(errorText(error), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) }
                     }
                     state.note?.let { note ->
                         item { Text(note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp)) }
@@ -211,6 +220,11 @@ private fun IdleContent(app: AppModel, history: List<String>, model: SearchViewM
                 ListItem(
                     headlineContent = { Text(item) },
                     leadingContent = { Icon(Icons.Filled.History, contentDescription = null) },
+                    trailingContent = {
+                        IconButton(onClick = { app.removeHistory(item) }) {
+                            Icon(Icons.Filled.Clear, contentDescription = stringResource(R.string.search_remove_recent, item))
+                        }
+                    },
                     modifier = Modifier.clickable { model.search(item) },
                 )
             }
@@ -226,6 +240,33 @@ private fun SectionHeader(text: String, modifier: Modifier = Modifier) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp),
     )
+}
+
+@Composable
+private fun SortMenu(selection: SearchViewModel.Sort, onSelect: (SearchViewModel.Sort) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { open = true }) {
+            Icon(
+                Icons.Filled.SwapVert,
+                contentDescription = stringResource(R.string.sort_title),
+                tint = if (selection != SearchViewModel.Sort.Relevance) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            listOf(
+                SearchViewModel.Sort.Relevance to R.string.sort_relevance,
+                SearchViewModel.Sort.PriceLowToHigh to R.string.sort_price_low,
+                SearchViewModel.Sort.PriceHighToLow to R.string.sort_price_high,
+            ).forEach { (sort, label) ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(label)) },
+                    leadingIcon = { if (sort == selection) Icon(Icons.Filled.Check, contentDescription = null) },
+                    onClick = { onSelect(sort); open = false },
+                )
+            }
+        }
+    }
 }
 
 @Composable
