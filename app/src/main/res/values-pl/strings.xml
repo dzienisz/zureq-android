@@ -51,6 +51,8 @@
     <string name="filters_no_limit">Bez limitu</string>
     <string name="filters_currency_note">W walucie sklepu.</string>
     <string name="filters_in_stock">Tylko dostępne</string>
+    <string name="filters_inpost_pay">Tylko InPost Pay</string>
+    <string name="filters_inpost_pay_note">Tylko produkty, za które zapłacisz przez InPost Pay.</string>
     <string name="filters_reset">Wyczyść filtry</string>
     <string name="filters_done">Gotowe</string>
     <string name="out_of_stock">Niedostępny</string>

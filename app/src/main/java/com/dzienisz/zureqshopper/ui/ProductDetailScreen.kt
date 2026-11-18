@@ -66,8 +66,9 @@ import kotlinx.serialization.json.JsonPrimitive
 
 /** Prefer get_product's live price over the indexed search price; remember the old one if it changed. */
 fun applyLiveDetails(product: Product, details: ProductDetails): Pair<Product, Double?> {
-    val price = details.price?.takeIf { it.isFinite() } ?: return product to null
-    val updated = product.copy(
+    val flagged = if (details.flags != null) product.copy(flags = details.flags) else product
+    val price = details.price?.takeIf { it.isFinite() } ?: return flagged to null
+    val updated = flagged.copy(
         price = price,
         currency = details.currency ?: product.currency,
         inStock = details.inStock ?: product.inStock,
@@ -204,6 +205,7 @@ fun ProductDetailScreen(app: AppModel, initial: Product, onBack: () -> Unit) {
             }
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(product.name, style = MaterialTheme.typography.titleLarge)
+                if (product.hasInPostPay) InPostPayChip()
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Bottom) {
                     PriceText(product.price, product.currency, style = MaterialTheme.typography.headlineMedium)
                     previousPrice?.let {

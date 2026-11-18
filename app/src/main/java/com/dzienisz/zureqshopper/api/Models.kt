@@ -39,12 +39,17 @@ data class Product(
     val inStock: Boolean? = null,
     val category: String? = null,
     val imageUrl: String? = null,
+    /** Payment flags such as `inpost_pay`. search_products rows carry none; get_product does. */
+    val flags: List<String>? = null,
 ) {
     val id: String get() = "$shopId|$sku"
+    val hasInPostPay: Boolean get() = flags?.contains(INPOST_PAY) == true
 
     /** Falls back to the SKU when the feed has no name and decodes HTML entities left by shop feeds. */
     fun normalized(): Product = copy(name = name.ifBlank { sku }.decodeHtmlEntities())
 }
+
+const val INPOST_PAY = "inpost_pay"
 
 @Serializable
 internal data class SearchResultDto(
@@ -89,6 +94,7 @@ data class ProductDetails(
     val syncedAt: String? = null,
     val variants: List<Variant>? = null,
     val requiresVariant: Boolean? = null,
+    val flags: List<String>? = null,
 ) {
     val stockQty: Int? get() = stockQtyValue?.toInt()
     val displayName: String? get() = name?.decodeHtmlEntities()

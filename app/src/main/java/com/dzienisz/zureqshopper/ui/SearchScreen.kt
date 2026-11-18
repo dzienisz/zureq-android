@@ -338,6 +338,17 @@ private fun FiltersSheet(state: SearchViewModel.State, model: SearchViewModel, o
                 Text(stringResource(R.string.filters_in_stock), modifier = Modifier.weight(1f))
                 Switch(checked = state.inStockOnly, onCheckedChange = model::setInStockOnly)
             }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.filters_inpost_pay))
+                    Text(
+                        stringResource(R.string.filters_inpost_pay_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = state.inPostPayOnly, onCheckedChange = model::setInPostPayOnly)
+            }
             if (state.hasFilters) {
                 TextButton(onClick = model::resetFilters) {
                     Text(stringResource(R.string.filters_reset), color = MaterialTheme.colorScheme.error)
@@ -364,6 +375,7 @@ fun ProductRow(product: Product, modifier: Modifier = Modifier, onClick: () -> U
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     PriceText(product.price, product.currency)
                     if (product.inStock == false) OutOfStockChip()
+                    if (product.hasInPostPay) InPostPayChip()
                 }
             }
         }

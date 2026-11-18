@@ -52,6 +52,8 @@
     <string name="filters_no_limit">No limit</string>
     <string name="filters_currency_note">In the shop\'s own currency.</string>
     <string name="filters_in_stock">In stock only</string>
+    <string name="filters_inpost_pay">InPost Pay only</string>
+    <string name="filters_inpost_pay_note">Only products you can pay for with InPost Pay.</string>
     <string name="filters_reset">Reset filters</string>
     <string name="filters_done">Done</string>
     <string name="out_of_stock">Out of stock</string>

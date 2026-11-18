@@ -17,7 +17,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.dzienisz.zureqshopper.api.INPOST_PAY
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.JsonPrimitive
 
 class SearchViewModel(private val app: AppModel, private val prefs: SharedPreferences?) : ViewModel() {
@@ -34,6 +37,7 @@ class SearchViewModel(private val app: AppModel, private val prefs: SharedPrefer
         val market: String = "",
         val maxPrice: String = "",
         val inStockOnly: Boolean = true,
+        val inPostPayOnly: Boolean = false,
         val phase: Phase = Phase.Idle,
         val products: List<Product> = emptyList(),
         val note: String? = null,
@@ -48,7 +52,7 @@ class SearchViewModel(private val app: AppModel, private val prefs: SharedPrefer
         val sortedProducts: List<Product> get() = sorted(products, sort)
         /** True when the results mix currencies, so prices only compare within one currency. */
         val hasMixedCurrencies: Boolean get() = products.mapNotNull { it.currency }.distinct().size > 1
-        val hasFilters: Boolean get() = maxPrice.isNotEmpty() || !inStockOnly
+        val hasFilters: Boolean get() = maxPrice.isNotEmpty() || !inStockOnly || inPostPayOnly
         val canLoadMore: Boolean get() = phase == Phase.Results && !isLoadingMore && products.size >= limit && limit < MAX_LIMIT
     }
 
@@ -73,7 +77,8 @@ class SearchViewModel(private val app: AppModel, private val prefs: SharedPrefer
     fun setMaxPrice(value: String) = _state.update { it.copy(maxPrice = value) }
     fun setInStockOnly(value: Boolean) = _state.update { it.copy(inStockOnly = value) }
     fun setSort(value: Sort) = _state.update { it.copy(sort = value) }
-    fun resetFilters() = _state.update { it.copy(maxPrice = "", inStockOnly = true) }
+    fun setInPostPayOnly(value: Boolean) = _state.update { it.copy(inPostPayOnly = value) }
+    fun resetFilters() = _state.update { it.copy(maxPrice = "", inStockOnly = true, inPostPayOnly = false) }
 
     fun search(raw: String? = null) {
         val text = (raw ?: _state.value.query).trim()
@@ -97,7 +102,7 @@ class SearchViewModel(private val app: AppModel, private val prefs: SharedPrefer
                 if (request != generation) return@launch
                 app.addHistory(text)
                 _state.update {
-                    it.copy(products = result.products, note = result.note, phase = if (result.products.isEmpty()) Phase.Empty else Phase.Results)
+                    it.copy(products = tagged(result.products, args), note = result.note, phase = if (result.products.isEmpty()) Phase.Empty else Phase.Results)
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -115,12 +120,13 @@ class SearchViewModel(private val app: AppModel, private val prefs: SharedPrefer
         viewModelScope.launch {
             try {
                 val s = _state.value
+                val args = arguments(s, s.searchedQuery)
                 val result = SearchResult.from(
-                    app.call("search_products", arguments(s, s.searchedQuery), SearchResult.dtoSerializer()) { SearchResult.from(it).products.size },
+                    app.call("search_products", args, SearchResult.dtoSerializer()) { SearchResult.from(it).products.size },
                 )
                 if (request != generation) return@launch
                 _state.update {
-                    it.copy(products = result.products.ifEmpty { it.products }, note = result.note, isLoadingMore = false)
+                    it.copy(products = tagged(result.products, args).ifEmpty { it.products }, note = result.note, isLoadingMore = false)
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -163,7 +169,15 @@ class SearchViewModel(private val app: AppModel, private val prefs: SharedPrefer
             )
             args.putAll(Location.arguments(state.market))
             PriceFormat.parseMaxPrice(state.maxPrice)?.let { args["maxPrice"] = JsonPrimitive(it) }
+            if (state.inPostPayOnly) args["flags"] = JsonArray(listOf(JsonPrimitive(INPOST_PAY)))
             return JsonObject(args)
+        }
+
+        /** search_products rows carry no flags, so a search filtered by flags marks its own rows. */
+        fun tagged(products: List<Product>, args: JsonObject): List<Product> {
+            val flags = (args["flags"] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }.orEmpty()
+            if (flags.isEmpty()) return products
+            return products.map { if (it.flags == null) it.copy(flags = flags) else it }
         }
 
         fun factory(app: AppModel, prefs: SharedPreferences? = null): ViewModelProvider.Factory = viewModelFactory {
