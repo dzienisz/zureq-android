@@ -2,6 +2,7 @@ package com.dzienisz.zureqshopper
 
 import com.dzienisz.zureqshopper.api.HttpResponse
 import com.dzienisz.zureqshopper.api.HttpTransport
+import com.dzienisz.zureqshopper.api.CheckoutLink
 import com.dzienisz.zureqshopper.api.Product
 import com.dzienisz.zureqshopper.ui.applyLiveDetails
 import com.dzienisz.zureqshopper.api.ProductDetails
@@ -117,6 +118,19 @@ class SearchViewModelTest {
         val marked = product.copy(flags = listOf("inpost_pay"))
         assertFalse(applyLiveDetails(marked, ProductDetails(price = 12.0, flags = emptyList())).first.hasInPostPay)
         assertTrue(applyLiveDetails(marked, ProductDetails(price = 12.0)).first.hasInPostPay)
+    }
+
+    @Test
+    fun checkoutLinkThatIsTheProductPage() {
+        val page = "https://shop.pl/p/mug/51473"
+        assertTrue(CheckoutLink(page).opensProductPage(page))
+        assertTrue(CheckoutLink("$page/").opensProductPage(page))
+        assertFalse(CheckoutLink("https://shop.pl/cart/1:1").opensProductPage(page))
+        assertFalse(CheckoutLink("$page?add-to-cart=7").opensProductPage(page))
+        assertFalse(CheckoutLink(page).opensProductPage(null))
+        assertTrue(CheckoutLink("https://shop.pl/x", cartPrepared = false).opensProductPage(null))
+        val product = Product(shopId = "s", sku = "1")
+        assertEquals(page, applyLiveDetails(product, ProductDetails(productUrl = page)).first.productUrl)
     }
 
     @Test

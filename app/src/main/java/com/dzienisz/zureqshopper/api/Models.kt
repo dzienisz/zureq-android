@@ -41,6 +41,8 @@ data class Product(
     val imageUrl: String? = null,
     /** Payment flags such as `inpost_pay`. search_products rows carry none; get_product does. */
     val flags: List<String>? = null,
+    /** Missing from some search_products rows; get_product has it. */
+    val productUrl: String? = null,
 ) {
     val id: String get() = "$shopId|$sku"
     val hasInPostPay: Boolean get() = flags?.contains(INPOST_PAY) == true
@@ -95,6 +97,7 @@ data class ProductDetails(
     val variants: List<Variant>? = null,
     val requiresVariant: Boolean? = null,
     val flags: List<String>? = null,
+    val productUrl: String? = null,
 ) {
     val stockQty: Int? get() = stockQtyValue?.toInt()
     val displayName: String? get() = name?.decodeHtmlEntities()
@@ -102,7 +105,35 @@ data class ProductDetails(
 }
 
 @Serializable
-data class CheckoutLink(val checkoutUrl: String, val note: String? = null)
+data class CheckoutLink(
+    val checkoutUrl: String,
+    val note: String? = null,
+    /** Sent as false when the shop needs the buyer to add the item on its own page. */
+    val cartPrepared: Boolean? = null,
+) {
+    /**
+     * create_checkout_link can answer with the product page instead of a prepared cart
+     * (`cartPrepared: false`, or the product's own URL); the buyer still has to add the item there.
+     */
+    fun opensProductPage(productUrl: String?): Boolean = cartPrepared == false || samePage(checkoutUrl, productUrl)
+
+    companion object {
+        /** Same origin, path and query; a query such as `?add-to-cart=7` on the product page is a cart link. */
+        fun samePage(a: String, b: String?): Boolean {
+            if (b == null) return false
+            return try {
+                val left = java.net.URI(a.trim())
+                val right = java.net.URI(b.trim())
+                left.host != null && left.host.equals(right.host, ignoreCase = true) &&
+                    left.scheme.equals(right.scheme, ignoreCase = true) && left.port == right.port &&
+                    left.path.orEmpty().removeSuffix("/") == right.path.orEmpty().removeSuffix("/") &&
+                    left.rawQuery.orEmpty() == right.rawQuery.orEmpty()
+            } catch (e: Exception) {
+                false
+            }
+        }
+    }
+}
 
 @Serializable
 data class ShopInfo(

@@ -66,7 +66,7 @@ import kotlinx.serialization.json.JsonPrimitive
 
 /** Prefer get_product's live price over the indexed search price; remember the old one if it changed. */
 fun applyLiveDetails(product: Product, details: ProductDetails): Pair<Product, Double?> {
-    val flagged = if (details.flags != null) product.copy(flags = details.flags) else product
+    val flagged = product.copy(flags = details.flags ?: product.flags, productUrl = details.productUrl ?: product.productUrl)
     val price = details.price?.takeIf { it.isFinite() } ?: return flagged to null
     val updated = flagged.copy(
         price = price,
@@ -88,6 +88,7 @@ fun ProductDetailScreen(app: AppModel, initial: Product, onBack: () -> Unit) {
     var loadError by remember { mutableStateOf<Throwable?>(null) }
     var checkoutError by remember { mutableStateOf<String?>(null) }
     var checkoutFailure by remember { mutableStateOf<Throwable?>(null) }
+    var openedProductPage by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
     var openingCheckout by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -128,6 +129,7 @@ fun ProductDetailScreen(app: AppModel, initial: Product, onBack: () -> Unit) {
         openingCheckout = true
         checkoutError = null
         checkoutFailure = null
+        openedProductPage = false
         scope.launch {
             try {
                 val sku = variantSku ?: product.sku
@@ -145,6 +147,7 @@ fun ProductDetailScreen(app: AppModel, initial: Product, onBack: () -> Unit) {
                 if (uri.scheme != "https" && uri.scheme != "http") {
                     checkoutError = invalidLink
                 } else {
+                    openedProductPage = link.opensProductPage(product.productUrl)
                     context.startActivity(Intent(Intent.ACTION_VIEW, uri))
                 }
             } catch (e: Exception) {
@@ -178,6 +181,7 @@ fun ProductDetailScreen(app: AppModel, initial: Product, onBack: () -> Unit) {
                 HorizontalDivider()
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     checkoutError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                    if (openedProductPage) Text(stringResource(R.string.checkout_product_page_note), style = MaterialTheme.typography.bodySmall)
                     checkoutFailure?.let { Text(errorText(it, R.string.product_checkout_failed), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                     Button(
                         onClick = { openCheckout() },
