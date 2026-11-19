@@ -38,7 +38,15 @@ data class ShopGroup(val shopId: String, val shopName: String, val parts: List<L
 }
 
 /** One checkout link for a shop; [index]/[count] identify the cart when a shop needs several, [query] a single-item fallback. */
-data class CartLink(val index: Int, val count: Int, val query: String? = null, val url: String? = null, val error: ZureqException? = null)
+data class CartLink(
+    val index: Int,
+    val count: Int,
+    val query: String? = null,
+    val url: String? = null,
+    val error: ZureqException? = null,
+    /** The link leads to the product page; the buyer adds the item to the cart there. */
+    val opensProductPage: Boolean = false,
+)
 
 sealed interface ShopMessage {
     data class StillChecking(val query: String, val error: ZureqException?) : ShopMessage
@@ -219,13 +227,15 @@ class ShoppingList(private val prefs: SharedPreferences, private val now: () -> 
             val links = mutableListOf<CartLink>()
             for ((index, chunkParts) in chunks.withIndex()) {
                 try {
-                    links += CartLink(index, chunks.size, url = link(shopId, chunkParts, createLink))
+                    val (url, productPage) = link(shopId, chunkParts, createLink)
+                    links += CartLink(index, chunks.size, url = url, opensProductPage = productPage)
                 } catch (e: ZureqException) {
                     if (e.stopsBatch) { links += CartLink(index, chunks.size, error = e); break }
                     if (chunkParts.size == 1) { links += CartLink(index, chunks.size, chunkParts[0].query, error = e); continue }
                     for (part in chunkParts) {
                         try {
-                            links += CartLink(index, chunks.size, part.query, url = link(shopId, listOf(part), createLink))
+                            val (url, productPage) = link(shopId, listOf(part), createLink)
+                            links += CartLink(index, chunks.size, part.query, url = url, opensProductPage = productPage)
                         } catch (inner: ZureqException) {
                             links += CartLink(index, chunks.size, part.query, error = inner)
                         }
@@ -238,7 +248,7 @@ class ShoppingList(private val prefs: SharedPreferences, private val now: () -> 
         }
     }
 
-    private suspend fun link(shopId: String, parts: List<ListPart>, createLink: suspend (String, List<String>) -> CheckoutLink): String {
+    private suspend fun link(shopId: String, parts: List<ListPart>, createLink: suspend (String, List<String>) -> CheckoutLink): Pair<String, Boolean> {
         val link = try {
             createLink(shopId, parts.mapNotNull { it.checkoutSku })
         } catch (e: ZureqException) {
@@ -248,7 +258,8 @@ class ShoppingList(private val prefs: SharedPreferences, private val now: () -> 
         }
         val url = link.checkoutUrl.trim()
         if (!(url.startsWith("https://") || url.startsWith("http://"))) throw ZureqException(ZureqException.Code.PARSE_ERROR)
-        return url
+        // A link for several items is never one product's page.
+        return url to link.opensProductPage(parts.singleOrNull()?.pick?.productUrl)
     }
 
     private suspend fun shopInfo(shopId: String, fetch: suspend (String) -> ShopInfo): ShopInfo {

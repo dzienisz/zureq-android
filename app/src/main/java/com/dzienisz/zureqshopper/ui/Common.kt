@@ -180,6 +180,19 @@ fun PriceText(price: Double?, currency: String?, modifier: Modifier = Modifier, 
 }
 
 @Composable
+fun InPostPayChip() {
+    val yellow = Color(0xFFFFCD00)
+    Surface(shape = RoundedCornerShape(50), color = yellow.copy(alpha = 0.18f), border = BorderStroke(1.dp, yellow)) {
+        Text(
+            "InPost Pay",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+        )
+    }
+}
+
+@Composable
 fun OutOfStockChip() {
     Surface(shape = RoundedCornerShape(50), color = Color.Transparent, border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f))) {
         Text(

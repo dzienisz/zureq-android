@@ -315,7 +315,15 @@ private fun ShopGroupCard(
             }
             carts.forEach { cart ->
                 val base = if (cart.count == 1) stringResource(R.string.list_cart) else stringResource(R.string.list_cart_n, cart.index + 1, cart.count)
-                val label = cart.query?.let { "$base: $it" } ?: base
+                val kind = if (cart.opensProductPage) stringResource(R.string.list_product_page) else base
+                val label = cart.query?.let { "$kind: $it" } ?: kind
+                if (cart.opensProductPage) {
+                    Text(
+                        stringResource(R.string.checkout_product_page_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 if (cart.url != null) {
                     OutlinedButton(onClick = { onOpen(cart.url) }, shape = MaterialTheme.shapes.small, modifier = Modifier.fillMaxWidth()) { Text("${stringResource(R.string.list_open)} · $label") }
                 } else {

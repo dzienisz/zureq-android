@@ -51,6 +51,8 @@
     <string name="filters_no_limit">Bez limitu</string>
     <string name="filters_currency_note">W walucie sklepu.</string>
     <string name="filters_in_stock">Tylko dostępne</string>
+    <string name="filters_inpost_pay">Tylko InPost Pay</string>
+    <string name="filters_inpost_pay_note">Tylko produkty, za które zapłacisz przez InPost Pay.</string>
     <string name="filters_reset">Wyczyść filtry</string>
     <string name="filters_done">Gotowe</string>
     <string name="out_of_stock">Niedostępny</string>
@@ -196,4 +198,6 @@
     <string name="list_cart_n">Koszyk %1$d z %2$d</string>
     <string name="list_search_failed">Wyszukiwanie nie powiodło się.</string>
     <string name="list_open">Otwórz</string>
+    <string name="list_product_page">Strona produktu</string>
+    <string name="checkout_product_page_note">Sklep kieruje na stronę produktu, a nie do koszyka. Dodaj tam produkt do koszyka.</string>
 </resources>

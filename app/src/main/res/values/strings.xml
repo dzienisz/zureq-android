@@ -52,6 +52,8 @@
     <string name="filters_no_limit">No limit</string>
     <string name="filters_currency_note">In the shop\'s own currency.</string>
     <string name="filters_in_stock">In stock only</string>
+    <string name="filters_inpost_pay">InPost Pay only</string>
+    <string name="filters_inpost_pay_note">Only products you can pay for with InPost Pay.</string>
     <string name="filters_reset">Reset filters</string>
     <string name="filters_done">Done</string>
     <string name="out_of_stock">Out of stock</string>
@@ -185,4 +187,6 @@
     <string name="list_cart_n">Cart %1$d of %2$d</string>
     <string name="list_search_failed">Search failed.</string>
     <string name="list_open">Open</string>
+    <string name="list_product_page">Product page</string>
+    <string name="checkout_product_page_note">The shop sends you to the product page, not a cart. Add the item to the cart there.</string>
 </resources>
